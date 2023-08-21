@@ -5,6 +5,7 @@
 
 
 
+
 ## TODO
 
 - 主题修改
@@ -18,5 +19,6 @@
 
 ## 参考
 
-https://github.com/boyan01/flutter-netease-music/tree/main
-https://github.com/Sangwan5688/BlackHole/tree/main
+- https://github.com/lyswhut/lx-music-mobile
+- https://github.com/boyan01/flutter-netease-music/tree/main
+- https://github.com/Sangwan5688/BlackHole/tree/main
