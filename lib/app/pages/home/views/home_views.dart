@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lx_music_flutter/app/pages/kw/main/kw_view.dart';
 import 'package:lx_music_flutter/app/pages/profile/views/profile_view.dart';
 import 'package:lx_music_flutter/app/pages/song_list/views/song_list_view.dart';
 
@@ -33,7 +34,7 @@ class _HomeViewsState extends State<HomeViews> {
         pages[index] ??= const SongListView();
         break;
       case 1:
-        pages[index] ??= const Text('111');
+        pages[index] ??= const KWView();
         break;
       case 2:
         pages[index] ??= const ProfileView();
@@ -53,25 +54,27 @@ class _HomeViewsState extends State<HomeViews> {
         () => getPage(controller.currentIndex.value),
       ),
       drawer: getDrawer(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: controller.currentIndex.value,
-        onTap: (value) {
-          controller.currentIndex.value = value;
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '主页',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.queue_music),
-            label: '音乐榜',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: '我的',
-          ),
-        ],
+      bottomNavigationBar: Obx(
+        () => BottomNavigationBar(
+          currentIndex: controller.currentIndex.value,
+          onTap: (value) {
+            controller.currentIndex.value = value;
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: '主页',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.queue_music),
+              label: '音乐榜',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: '我的',
+            ),
+          ],
+        ),
       ),
     );
   }

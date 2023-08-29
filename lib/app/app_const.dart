@@ -2,6 +2,8 @@
 class AppConst {
   /// 设置面板内嵌导航器的key
   static const int navigatorKeySetting = 10000;
+
+  static const int navigatorKeyKW = 10001;
 }
 
 /// 所有url
