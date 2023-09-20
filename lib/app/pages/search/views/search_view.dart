@@ -1,6 +1,7 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
 import 'package:lx_music_flutter/utils/player/music_player.dart';
@@ -8,14 +9,14 @@ import 'package:lx_music_flutter/utils/toast_util.dart';
 
 import '../controllers/search_song_controller.dart';
 
-class SearchView extends StatefulWidget {
-  const SearchView({super.key});
+class SearchViewWidget extends BaseStatefulWidget {
+  const SearchViewWidget({super.key, required super.title,});
 
   @override
-  State<SearchView> createState() => _SearchViewState();
+  State<SearchViewWidget> createState() => _SearchViewWidgetState();
 }
 
-class _SearchViewState extends State<SearchView> {
+class _SearchViewWidgetState extends State<SearchViewWidget> {
   late SearchSongController searchSongController;
   late EasyRefreshController easyRefreshController;
 

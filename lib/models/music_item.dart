@@ -31,16 +31,26 @@ class MusicItem {
   @JsonKey(defaultValue: 0)
   final int size;
 
-  MusicItem(this.id, this.songName, this.artist, this.album, this.hash, this.artistid, this.length, this.size);
+  MusicItem({
+    this.id = '',
+    this.songName = '',
+    this.artist = '',
+    this.album = '',
+    this.hash = '',
+    this.artistid = '',
+    this.length = 0,
+    this.size = 0,
+    this.url = '',
+  });
 
   factory MusicItem.fromJson(Map<String, dynamic> json) => _$MusicItemFromJson(json);
 
   Map<String, dynamic> toJson() => _$MusicItemToJson(this);
 
-  String? _url;
+  String? url;
 
   Future<String?> getUrl() async {
-    _url ??= await SongRepository.getSongUrl(hash);
-    return _url;
+    // url ??= await SongRepository.getSongUrl(hash);
+    return url;
   }
 }

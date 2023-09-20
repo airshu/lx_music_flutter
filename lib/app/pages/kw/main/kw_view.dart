@@ -2,6 +2,7 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
+import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/app/pages/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/pages/kw/song_list/kw_list_view.dart';
 import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
@@ -9,8 +10,8 @@ import 'package:lx_music_flutter/utils/toast_util.dart';
 
 import 'kw_controller.dart';
 
-class KWView extends StatefulWidget {
-  const KWView({super.key});
+class KWView extends BaseStatefulWidget {
+  const KWView({super.key, required super.title});
 
   @override
   State<KWView> createState() => _KWViewState();
@@ -73,8 +74,11 @@ class _KWViewState extends State<KWView> {
         onTap: () async {
           String songmid = item['songmid'];
           for(var t in item['types']) {
-            var result = await KWSongList.getMusicUrlTest(songmid, t['type']);
-            print('$songmid  ${t['type']}=======>>>>>>result=$result');
+            var result = await KWSongList.getMusicUrlDirect(songmid, t['type']);
+            if(result['url'] != null && result['url'].isNotEmpty) {
+              print('$songmid  ${t['type']}=======>>>>>>result=$result');
+              item.url = result['url'];
+            }
             return;
           }
         },

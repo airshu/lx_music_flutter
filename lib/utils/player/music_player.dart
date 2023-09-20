@@ -6,10 +6,11 @@ import 'package:rxdart/rxdart.dart';
 
 /// 音乐播放器
 class MusicPlayer {
-  factory MusicPlayer() => _instance ?? MusicPlayer._();
 
-  MusicPlayer._() {
-  }
+
+  factory MusicPlayer() => _instance ??=  MusicPlayer._();
+
+  MusicPlayer._();
 
   static MusicPlayer? _instance;
 
@@ -25,9 +26,8 @@ class MusicPlayer {
       (position, bufferedPosition, duration) => PositionData(position, bufferedPosition, duration ?? Duration.zero));
 
   void init() async {
-
-    player.setAudioSource(playList);
-    player.seek(Duration.zero, index: 0);
+    player.setAudioSource(playList, preload: true);
+    // player.seek(Duration.zero, index: 0);
 
     player.playbackEventStream.listen((PlaybackEvent event) {
       Logger.debug('processingState: ${event.processingState}');
@@ -44,6 +44,32 @@ class MusicPlayer {
     }, onError: (Object e, StackTrace stackTrace) {
       Logger.error('A stream error occurred: $e');
     });
+
+    player.processingStateStream.listen((event) {
+      Logger.debug('processingStateStream   $event');
+    });
+
+    player.positionStream.listen((event) {
+      Logger.debug('positionStream   $event');
+    });
+
+    player.durationStream.listen((event) {
+      Logger.debug('durationStream   $event');
+    });
+
+    player.bufferedPositionStream.listen((event) {
+      Logger.debug('bufferedPositionStream   $event');
+    });
+
+    player.playerStateStream.listen((event) {
+      Logger.debug('playerStateStream   $event');
+    });
+
+    player.sequenceStateStream.listen((event) {
+      Logger.debug('sequenceStateStream   $event');
+    });
+
+
   }
 
   /// 添加一首歌曲到播放列表
@@ -52,9 +78,10 @@ class MusicPlayer {
     if (url == null) {
       return;
     }
-    playList.insert(0, AudioSource.uri(Uri.parse(url), tag: item));
-    player.seek(Duration.zero, index: 0);
+    await playList.insert(0, AudioSource.uri(Uri.parse(url), tag: item));
+    await player.seek(Duration.zero, index: 0);
     player.play();
+    Logger.debug('add  $item  ${player.currentIndex}  ${player.sequenceState?.currentSource}');
   }
 
   Future<void> remove(int index) async {

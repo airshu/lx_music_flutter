@@ -40,14 +40,14 @@ class SongRepository {
       List<MusicItem> list = [];
       result['data'].forEach((element) {
         MusicItem item = MusicItem(
-          element['id'] as String? ?? '',
-          element['filename'] as String? ?? '',
-          element['artist'] as String? ?? '',
-          element['album'] as String? ?? '',
-          element['hash'] as String? ?? '',
-          element['artistid'] as String? ?? '',
-          element['timelength'] as int ?? 0,
-          element['size'] as int ?? 0,
+          id: element['id'] as String? ?? '',
+          songName: element['filename'] as String? ?? '',
+          artist: element['artist'] as String? ?? '',
+          album: element['album'] as String? ?? '',
+          hash: element['hash'] as String? ?? '',
+          artistid: element['artistid'] as String? ?? '',
+          length: element['timelength'] as int ?? 0,
+          size: element['size'] as int ?? 0,
         );
         list.add(item);
         // getSongUrl(element['hash']);

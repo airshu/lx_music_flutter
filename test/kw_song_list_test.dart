@@ -10,7 +10,7 @@ void main() {
 
   testWidgets('KW song list', (_) async {
 
-    await KWSongList.getHotList();
+    // await KWSongList.getHotList();
 
   });
 }

@@ -3,7 +3,9 @@
 import 'package:flutter/material.dart';
 
 class BaseStatefulWidget extends StatefulWidget {
-  const BaseStatefulWidget({super.key});
+  const BaseStatefulWidget({super.key, required this.title});
+
+  final String title;
 
   @override
   State<BaseStatefulWidget> createState() => BaseStatefulWidgetState();

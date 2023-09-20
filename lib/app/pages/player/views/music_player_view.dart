@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
+import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:lx_music_flutter/utils/player/music_player.dart';
 
 import 'base/controll_buttons.dart';
@@ -40,6 +41,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
               stream: MusicPlayer().positionDataStream,
               builder: (context, snapshot) {
                 final positionData = snapshot.data;
+                Logger.debug('music_player_view ====positionDataStream===========  $positionData');
                 return SeekBar(
                   duration: positionData?.duration ?? Duration.zero,
                   position: positionData?.position ?? Duration.zero,

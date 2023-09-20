@@ -7,14 +7,15 @@ part of 'music_item.dart';
 // **************************************************************************
 
 MusicItem _$MusicItemFromJson(Map<String, dynamic> json) => MusicItem(
-      json['id'] as String? ?? '',
-      json['songName'] as String? ?? '',
-      json['artist'] as String? ?? '',
-      json['album'] as String? ?? '',
-      json['hash'] as String? ?? '',
-      json['artistid'] as String? ?? '',
-      json['length'] as int? ?? 0,
-      json['size'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
+      songName: json['songName'] as String? ?? '',
+      artist: json['artist'] as String? ?? '',
+      album: json['album'] as String? ?? '',
+      hash: json['hash'] as String? ?? '',
+      artistid: json['artistid'] as String? ?? '',
+      length: json['length'] as int? ?? 0,
+      size: json['size'] as int? ?? 0,
+      url: json['url'] as String? ?? '',
     );
 
 Map<String, dynamic> _$MusicItemToJson(MusicItem instance) => <String, dynamic>{
@@ -26,4 +27,5 @@ Map<String, dynamic> _$MusicItemToJson(MusicItem instance) => <String, dynamic>{
       'artistid': instance.artistid,
       'length': instance.length,
       'size': instance.size,
+      'url': instance.url,
     };

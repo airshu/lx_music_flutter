@@ -4,6 +4,20 @@ class AppConst {
   static const int navigatorKeySetting = 10000;
 
   static const int navigatorKeyKW = 10001;
+
+  static const String nameKW = '小蜗音乐';
+  static const String nameKG = '小枸音乐';
+  static const String nameWY = '小芸音乐';
+  static const String nameMG = '小蜜音乐';
+  static const String nameQQ = '小秋音乐';
+
+  static const List platformNames = [
+    nameKW,
+    nameKG,
+    nameWY,
+    nameMG,
+    nameQQ,
+  ];
 }
 
 /// 所有url
