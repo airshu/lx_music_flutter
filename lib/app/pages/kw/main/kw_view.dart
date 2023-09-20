@@ -73,8 +73,9 @@ class _KWViewState extends State<KWView> {
         onTap: () async {
           String songmid = item['songmid'];
           for(var t in item['types']) {
-            var result = await KWSongList.getMusicUrlDirect(songmid, t['type']);
+            var result = await KWSongList.getMusicUrlTest(songmid, t['type']);
             print('$songmid  ${t['type']}=======>>>>>>result=$result');
+            return;
           }
         },
         child: Container(

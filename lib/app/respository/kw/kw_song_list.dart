@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:math';
-
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/respository/wy/crypto_utils.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
+import 'package:sqflite/utils/utils.dart';
+import 'package:convert/convert.dart' as convert;
 
 class KWSongList {
   static const int limit_song = 10000;
@@ -459,7 +462,7 @@ class KWSongList {
   static String? token;
 
   static Future getToken() async {
-    if(token != null) {
+    if (token != null) {
       return token;
     }
     String url = 'http://www.kuwo.cn/';
@@ -486,11 +489,16 @@ class KWSongList {
 
 
   static Future getMusicUrlDirect(String songmid, String type) async {
-    final targetUrl = 'http://www.kuwo.cn/api/v1/www/music/playUrl?mid=${songmid}&type=convert_url3&br=128kmp3';
-    final result = await HttpCore.getInstance().get(targetUrl, headers: {
+    String url = 'http://www.kuwo.cn/api/v1/www/music/playUrl?mid=$songmid&type=music&br=$type';
+    Map<String, dynamic> headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0',
       'Referer': 'http://kuwo.cn/',
-    });
+      'cookie': 'Hm_Iuvt_cdb524f42f0cer9b268e4v7y734w5esq24=4cGcsx3ej3tkYfeGrFtdS2kSZ6YD3nbD',
+      'Secret': '14da58a88a83170f11c3a63bb0ff6aec68a7487b64551a1f997356d719980a2b028f34f5',
+      "Accept": "application/json",
+      'Secret': '14da58a88a83170f11c3a63bb0ff6aec68a7487b64551a1f997356d719980a2b028f34f5',
+    };
+    final result = await HttpCore.getInstance().get(url, headers: headers);
     if (result['success'] == false) {
       return {'type': type, 'url': ''};
     }
@@ -498,25 +506,105 @@ class KWSongList {
   }
 
   static Future getMusicUrlTemp(String songmid, String type) async {
-    final result = await HttpCore.getInstance().get('http://tm.tempmusics.tk/url/kw/${songmid}/$type', options: Options(
-      headers: {
-        'family': 4,
-      },
-    ));
+    String url = 'http://tm.tempmusics.tk/url/kw/$songmid/$type';
+    Map<String, dynamic> headers = await getHeader(url, {
+      'User-Agent': 'lx-music request',
+      bHh: bHh,
+    });
+    final result = await HttpCore.getInstance().get(url, headers: headers);
     return result != null && result['code'] == 0 ? {'type': type, 'url': result['data']} : Future.error(Exception(result['msg']));
   }
 
   static Future getMusicUrlTest(String songmid, String type) async {
-    final result = await HttpCore.getInstance().get('http://ts.tempmusics.tk/url/kw/${songmid}/$type');
+    Map<String, dynamic> headers = {
+      'User-Agent': 'lx-music request',
+      bHh: bHh,
+      'family': 4,
+    };
+    String url = 'http://ts.tempmusics.tk/url/kw/$songmid/$type';
+    headers = await getHeader(url, headers);
+    final result = await HttpCore.getInstance()
+        .get(url, headers: headers, options: Options(sendTimeout: const Duration(seconds: 15), method: 'get'));
     return result['code'] == 0 ? {'type': type, 'url': result['data']} : Future.error(Exception(result.fail));
   }
 
-
+  /// 获取歌曲封面
   static Future getPic(String songmid) async {
-    String url = 'http://artistpicserver.kuwo.cn/pic.web?corp=kuwo&type=rid_pic&pictype=500&size=500&rid=${songmid}';
+    String url = 'http://artistpicserver.kuwo.cn/pic.web?corp=kuwo&type=rid_pic&pictype=500&size=500&rid=$songmid';
     var result = await HttpCore.getInstance().get(url);
     return result;
   }
 
+  static const String bHh = '624868746c';
 
+  static const String version = '1.1.0';
+  static RegExp regx = RegExp(r'(?:\d\w)+');
+
+  static Future<Map<String, dynamic>> getHeader(String url, Map<String, dynamic> headers) async {
+    if (headers.containsKey(bHh)) {
+      final bytes = convert.hex.decode(bHh);
+      String s = utf8.decode(bytes);
+      s = s.replaceAll(s.substring(s.length-1), '');
+      s = utf8.decode(base64.decode(s));
+
+      String v = version.split('-')[0].split('.').map((n) => n.length < 3 ? n.padLeft(3, '0') : n).join('');
+      String v2 = '';
+
+      List matches = regx.allMatches('$url$v').map((match) => match.group(0)).toList();
+      final jsonStr = json.encode(matches);
+      print('正则匹配http最后两位 jsonStr:  $jsonStr');
+      String tempStr = _formatJson(jsonStr, 1);
+      tempStr = '$tempStr$v';
+      tempStr = base64.encode(utf8.encode(tempStr));
+      print('base64处理  $tempStr');
+
+      final codec = ZLibCodec(raw: true);
+      final value = codec.encode(utf8.encode(tempStr));
+      print('deflateRaw压缩算法  $value');
+      String hexString = value.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+      hexString = '$hexString&${int.parse(v)}$v2';
+      print('计算最终结果： $hexString');
+
+      headers.remove(bHh);
+      headers[s] = hexString;
+    }
+    headers["Accept"] =  "application/json";
+    return headers;
+  }
+
+  static String _formatJson(String jsonString, int spaces) {
+    final indent = ' ' * spaces;
+    final buffer = StringBuffer();
+    var level = 0;
+
+    for (var i = 0; i < jsonString.length; i++) {
+      final char = jsonString[i];
+
+      if (char == '{' || char == '[') {
+        buffer.write(char);
+        buffer.write('\n');
+        level++;
+        buffer.write(indent * level);
+      } else if (char == '}' || char == ']') {
+        buffer.write('\n');
+        level--;
+        buffer.write(indent * level);
+        buffer.write(char);
+      } else if (char == ',') {
+        buffer.write(char);
+        buffer.write('\n');
+        buffer.write(indent * level);
+      } else {
+        buffer.write(char);
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  static Future<List<int>> deflateRaw(List<int> input) async {
+    final codec = ZLibCodec(raw: true);
+    final compressed = codec.encode(input);
+    return compressed;
+  }
 }

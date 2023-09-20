@@ -335,13 +335,13 @@ class BaseHttp {
     // Logger.debug("token: 'Bearer $accessToken'");
     //   return true;
     // }());
-    options.headers?['Client-Type'] = options.headers?['Client-Type'] ?? 'PC'; // 设置客户端类型
+    // options.headers?['Client-Type'] = options.headers?['Client-Type'] ?? 'PC'; // 设置客户端类型
     //
     packageInfo ??= await PackageInfo.fromPlatform();
     var version = packageInfo?.version ?? '';
     var buildNumber = packageInfo?.buildNumber ?? '';
     //
-    options.headers?['versionCode'] = '$version+$buildNumber';
+    // options.headers?['versionCode'] = '$version+$buildNumber';
     // options.headers?['time'] = DateTime.now().millisecondsSinceEpoch;
     //
     // if (Platform.isAndroid && androidInfo != null) {
@@ -350,11 +350,11 @@ class BaseHttp {
     //   options.headers?['androidId'] = androidInfo?.androidId ?? '';
     // }
     //
-    if (Platform.isIOS) {
-      iosInfo ??= await DeviceInfoPlugin().iosInfo;
-      options.headers?['model'] = iosInfo?.model ?? ''; //设备类型
-      options.headers?['iosId'] = iosInfo?.identifierForVendor ?? ''; //设备id
-    }
+    // if (Platform.isIOS) {
+    //   iosInfo ??= await DeviceInfoPlugin().iosInfo;
+    //   options.headers?['model'] = iosInfo?.model ?? ''; //设备类型
+    //   options.headers?['iosId'] = iosInfo?.identifierForVendor ?? ''; //设备id
+    // }
 
     // Logger.debug('option headers....   ${options.headers}');
     Logger.debug('>>>>>开始调用接口:'
