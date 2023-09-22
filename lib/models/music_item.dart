@@ -54,3 +54,13 @@ class MusicItem {
     return url;
   }
 }
+
+
+class Board {
+  final String id;
+  final String name;
+  final String bangid;
+  String? webId;
+
+  Board({required this.id, required this.name, required this.bangid, this.webId});
+}

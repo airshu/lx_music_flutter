@@ -1,9 +1,19 @@
 /// 全局常量
 class AppConst {
+
+  static String version = '1.1.0';
+
   /// 设置面板内嵌导航器的key
   static const int navigatorKeySetting = 10000;
 
   static const int navigatorKeyKW = 10001;
+
+  static const String bHh = '624868746c';
+
+  Map<String, dynamic> headers = {
+    'User-Agent': 'lx-music request',
+    AppConst.bHh: AppConst.bHh,
+  };
 
   static const String nameKW = '小蜗音乐';
   static const String nameKG = '小枸音乐';

@@ -1,3 +1,5 @@
+import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
 import '../../respository/kw/kw_song_list.dart';
@@ -109,7 +111,7 @@ class KWLeaderBoard {
         'albumId': item['albumid'],
         'songmid': item['id'],
         'source': 'kw',
-        'interval': KWSongList.formatPlayTime(int.parse(item['song_duration'])),
+        'interval': AppUtil.formatPlayTime(int.parse(item['song_duration'])),
         'img': item['pic'],
         'lrc': null,
         'otherSource': null,
@@ -125,10 +127,3 @@ class KWLeaderBoard {
   }
 }
 
-class Board {
-  final String id;
-  final String name;
-  final String bangid;
-
-  Board({required this.id, required this.name, required this.bangid});
-}

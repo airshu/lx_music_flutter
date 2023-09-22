@@ -7,6 +7,7 @@ import 'package:lx_music_flutter/app/pages/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/pages/kw/song_list/kw_list_view.dart';
 import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 
 import 'kw_controller.dart';
 

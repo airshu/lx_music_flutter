@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:lx_music_flutter/app/app_const.dart';
+import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/respository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
@@ -241,7 +243,7 @@ class KWSongList {
         'albumId': item['albumid'],
         'songmid': item['id'],
         'source': 'kw',
-        'interval': formatPlayTime(int.parse(item['duration'])),
+        'interval': AppUtil.formatPlayTime(int.parse(item['duration'])),
         'img': null,
         'lrc': null,
         'otherSource': null,
@@ -431,7 +433,7 @@ class KWSongList {
         'albumId': item['albumId'],
         'songmid': item['id'],
         'source': 'kw',
-        'interval': formatPlayTime(item['duration']),
+        'interval': AppUtil.formatPlayTime(item['duration']),
         'img': item['albumPic'],
         'releaseDate': item['releaseDate'],
         'lrc': null,
@@ -441,16 +443,6 @@ class KWSongList {
         'typeUrl': {},
       };
     }).toList();
-  }
-
-  static String formatPlayTime(int time) {
-    int m = (time / 60).truncate();
-    int s = (time % 60).truncate();
-    return m == 0 && s == 0 ? '--/--' : '${numFix(m)}:${numFix(s)}';
-  }
-
-  static String numFix(int num) {
-    return num.toString().padLeft(2, '0');
   }
 
   static String getListDetailUrl(String id, int page) {
@@ -487,7 +479,6 @@ class KWSongList {
     return result['tagvalue'];
   }
 
-
   static Future getMusicUrlDirect(String songmid, String type) async {
     String url = 'http://www.kuwo.cn/api/v1/www/music/playUrl?mid=$songmid&type=music&br=$type';
     Map<String, dynamic> headers = {
@@ -507,10 +498,10 @@ class KWSongList {
 
   static Future getMusicUrlTemp(String songmid, String type) async {
     String url = 'http://tm.tempmusics.tk/url/kw/$songmid/$type';
-    Map<String, dynamic> headers = await getHeader(url, {
+    Map<String, dynamic> headers = {
       'User-Agent': 'lx-music request',
-      bHh: bHh,
-    });
+      AppConst.bHh: AppConst.bHh,
+    };
     final result = await HttpCore.getInstance().get(url, headers: headers);
     return result != null && result['code'] == 0 ? {'type': type, 'url': result['data']} : Future.error(Exception(result['msg']));
   }
@@ -518,11 +509,11 @@ class KWSongList {
   static Future getMusicUrlTest(String songmid, String type) async {
     Map<String, dynamic> headers = {
       'User-Agent': 'lx-music request',
-      bHh: bHh,
+      AppConst.bHh: AppConst.bHh,
       'family': 4,
     };
     String url = 'http://ts.tempmusics.tk/url/kw/$songmid/$type';
-    headers = await getHeader(url, headers);
+    // headers = await getHeader(url, headers);
     final result = await HttpCore.getInstance()
         .get(url, headers: headers, options: Options(sendTimeout: const Duration(seconds: 15), method: 'get'));
     return result['code'] == 0 ? {'type': type, 'url': result['data']} : Future.error(Exception(result.fail));
@@ -535,72 +526,69 @@ class KWSongList {
     return result;
   }
 
-  static const String bHh = '624868746c';
-
-  static const String version = '1.1.0';
-  static RegExp regx = RegExp(r'(?:\d\w)+');
-
-  static Future<Map<String, dynamic>> getHeader(String url, Map<String, dynamic> headers) async {
-    if (headers.containsKey(bHh)) {
-      final bytes = convert.hex.decode(bHh);
-      String s = utf8.decode(bytes);
-      s = s.replaceAll(s.substring(s.length-1), '');
-      s = utf8.decode(base64.decode(s));
-
-      String v = version.split('-')[0].split('.').map((n) => n.length < 3 ? n.padLeft(3, '0') : n).join('');
-      String v2 = '';
-
-      List matches = regx.allMatches('$url$v').map((match) => match.group(0)).toList();
-      final jsonStr = json.encode(matches);
-      print('正则匹配http最后两位 jsonStr:  $jsonStr');
-      String tempStr = _formatJson(jsonStr, 1);
-      tempStr = '$tempStr$v';
-      tempStr = base64.encode(utf8.encode(tempStr));
-      print('base64处理  $tempStr');
-
-      final codec = ZLibCodec(raw: true);
-      final value = codec.encode(utf8.encode(tempStr));
-      print('deflateRaw压缩算法  $value');
-      String hexString = value.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
-      hexString = '$hexString&${int.parse(v)}$v2';
-      print('计算最终结果： $hexString');
-
-      headers.remove(bHh);
-      headers[s] = hexString;
-    }
-    headers["Accept"] =  "application/json";
-    return headers;
-  }
-
-  static String _formatJson(String jsonString, int spaces) {
-    final indent = ' ' * spaces;
-    final buffer = StringBuffer();
-    var level = 0;
-
-    for (var i = 0; i < jsonString.length; i++) {
-      final char = jsonString[i];
-
-      if (char == '{' || char == '[') {
-        buffer.write(char);
-        buffer.write('\n');
-        level++;
-        buffer.write(indent * level);
-      } else if (char == '}' || char == ']') {
-        buffer.write('\n');
-        level--;
-        buffer.write(indent * level);
-        buffer.write(char);
-      } else if (char == ',') {
-        buffer.write(char);
-        buffer.write('\n');
-        buffer.write(indent * level);
-      } else {
-        buffer.write(char);
-      }
-    }
-
-    return buffer.toString();
-  }
+  // static RegExp regx = RegExp(r'(?:\d\w)+');
+  //
+  // static Future<Map<String, dynamic>> getHeader(String url, Map<String, dynamic> headers) async {
+  //   if (headers.containsKey(AppConst.bHh)) {
+  //     final bytes = convert.hex.decode(AppConst.bHh);
+  //     String s = utf8.decode(bytes);
+  //     s = s.replaceAll(s.substring(s.length-1), '');
+  //     s = utf8.decode(base64.decode(s));
+  //
+  //     String v = AppConst.version.split('-')[0].split('.').map((n) => n.length < 3 ? n.padLeft(3, '0') : n).join('');
+  //     String v2 = '';
+  //
+  //     List matches = regx.allMatches('$url$v').map((match) => match.group(0)).toList();
+  //     final jsonStr = json.encode(matches);
+  //     print('正则匹配http最后两位 jsonStr:  $jsonStr');
+  //     String tempStr = _formatJson(jsonStr, 1);
+  //     tempStr = '$tempStr$v';
+  //     tempStr = base64.encode(utf8.encode(tempStr));
+  //     print('base64处理  $tempStr');
+  //
+  //     final codec = ZLibCodec(raw: true);
+  //     final value = codec.encode(utf8.encode(tempStr));
+  //     print('deflateRaw压缩算法  $value');
+  //     String hexString = value.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+  //     hexString = '$hexString&${int.parse(v)}$v2';
+  //     print('计算最终结果： $hexString');
+  //
+  //     headers.remove(AppConst.bHh);
+  //     headers[s] = hexString;
+  //   }
+  //   headers["Accept"] =  "application/json";
+  //   return headers;
+  // }
+  //
+  // static String _formatJson(String jsonString, int spaces) {
+  //   final indent = ' ' * spaces;
+  //   final buffer = StringBuffer();
+  //   var level = 0;
+  //
+  //   for (var i = 0; i < jsonString.length; i++) {
+  //     final char = jsonString[i];
+  //
+  //     if (char == '{' || char == '[') {
+  //       buffer.write(char);
+  //       buffer.write('\n');
+  //       level++;
+  //       buffer.write(indent * level);
+  //     } else if (char == '}' || char == ']') {
+  //       buffer.write('\n');
+  //       level--;
+  //       buffer.write(indent * level);
+  //       buffer.write(char);
+  //     } else if (char == ',') {
+  //       buffer.write(char);
+  //       buffer.write('\n');
+  //       buffer.write(indent * level);
+  //     } else {
+  //       buffer.write(char);
+  //     }
+  //   }
+  //
+  //   return buffer.toString();
+  // }
 
   static Future<List<int>> deflateRaw(List<int> input) async {
     final codec = ZLibCodec(raw: true);

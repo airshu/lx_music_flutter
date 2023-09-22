@@ -11,6 +11,7 @@ import 'package:lx_music_flutter/utils/http/entity.dart';
 import 'package:lx_music_flutter/utils/http/http_exception.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:convert/convert.dart' as convert;
 
 class HttpCode {
   static const int SUCCESS = 2000; // 有点奇怪，后台接口返回的正常code=2000
@@ -48,17 +49,31 @@ class BaseHttp {
     dio.options.connectTimeout = const Duration(milliseconds: 10 * 1000);
   }
 
-  //
-  // Future<ResponseEntity<T>> getResponseEntity<T>() async {
-  //
-  // }
-  //
   /// get method
   ///
   /// [cancelToken] 可取消该请求，cancelToken.cancel();
-  Future<dynamic> get(String url,
-      {Map<String, dynamic>? params, Map<String, dynamic>? headers, Options? options, CancelToken? cancelToken}) async {
-    return _request(url, method: GET, params: params, options: options, cancelToken: cancelToken, headers: headers);
+  Future<dynamic> get(
+    String url, {
+    Map<String, dynamic>? params,
+    Map<String, dynamic>? headers,
+    dynamic data,
+    Options? options,
+    CancelToken? cancelToken,
+    bool getResponse = false,
+  }) async {
+    options ??= Options();
+    options.extra ??= {};
+    handleRequestData(url, headers ?? {}, options.extra!);
+    return _request(
+      url,
+      method: GET,
+      params: params,
+      data: data,
+      options: options,
+      cancelToken: cancelToken,
+      headers: headers,
+      getResponse: getResponse,
+    );
   }
 
   Future<T> getEntity<T>(
@@ -67,8 +82,15 @@ class BaseHttp {
     Map<String, dynamic>? params,
     Options? options,
     CancelToken? cancelToken,
+    bool getResponse = false,
+    Map<String, dynamic>? headers,
   }) async {
-    var responseEntity = await getResponseEntity<T>(url, factory, params: params, options: options, cancelToken: cancelToken);
+    options ??= Options();
+    options.extra ??= {};
+    handleRequestData(url, headers ?? {}, options.extra!);
+
+    var responseEntity = await getResponseEntity<T>(url, factory,
+        headers: headers, params: params, options: options, cancelToken: cancelToken, getResponse: getResponse);
     if (responseEntity.code != HttpCode.SUCCESS) {
       throw HttpResponseCodeNotSuccess(responseEntity.code, responseEntity.msg);
     }
@@ -81,8 +103,10 @@ class BaseHttp {
     Map<String, dynamic>? params,
     Options? options,
     CancelToken? cancelToken,
+    bool getResponse = false,
+    Map<String, dynamic>? headers,
   }) async {
-    var res = await get(url, params: params, options: options, cancelToken: cancelToken);
+    var res = await get(url, params: params, headers: headers, options: options, cancelToken: cancelToken, getResponse: getResponse);
     // Logger.debug('\n\n\n==========>>>>>>>>>>>>>>>>$url>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
     // Logger.debug(res);
     // Logger.debug('==========>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n\n');
@@ -91,21 +115,31 @@ class BaseHttp {
   }
 
   /// post method
-  Future<dynamic> post(String url,
-      {dynamic data,
-      Map<String, dynamic>? params,
-      Options? options,
-      CancelToken? cancelToken,
-      ProgressCallback? onSendProgressCallback,
-      Map<String, dynamic>? headers}) async {
-    return _request(url,
-        method: POST,
-        params: params,
-        headers: headers,
-        data: data,
-        options: options,
-        cancelToken: cancelToken,
-        onSendProgressCallback: onSendProgressCallback);
+  Future<dynamic> post(
+    String url, {
+    dynamic data,
+    Map<String, dynamic>? params,
+    Options? options,
+    CancelToken? cancelToken,
+    ProgressCallback? onSendProgressCallback,
+    Map<String, dynamic>? headers,
+    bool getResponse = false,
+  }) async {
+    options ??= Options();
+    options.extra ??= {};
+    handleRequestData(url, headers ?? {}, options.extra!);
+
+    return _request(
+      url,
+      method: POST,
+      params: params,
+      headers: headers,
+      data: data,
+      options: options,
+      cancelToken: cancelToken,
+      onSendProgressCallback: onSendProgressCallback,
+      getResponse: getResponse,
+    );
   }
 
   Future<dynamic> delete(String url,
@@ -148,9 +182,14 @@ class BaseHttp {
     Map<String, dynamic>? params,
     Options? options,
     CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
   }) async {
-    var responseEntity =
-        await postResponseEntity<T>(url, factory, data: data, params: params, options: options, cancelToken: cancelToken);
+    options ??= Options();
+    options.extra ??= {};
+    handleRequestData(url, headers ?? {}, options.extra!);
+
+    var responseEntity = await postResponseEntity<T>(url, factory,
+        data: data, headers: headers, params: params, options: options, cancelToken: cancelToken);
     if (responseEntity.code != ResponseCode.SUCCESS && responseEntity.code != HttpCode.SUCCESS) {
       Logger.debug(responseEntity);
       Logger.debug('####' * 20);
@@ -166,36 +205,56 @@ class BaseHttp {
     Map<String, dynamic>? params,
     Options? options,
     CancelToken? cancelToken,
+    bool getResponse = false,
+    Map<String, dynamic>? headers,
   }) async {
-    var res = await post(url, data: data, params: params, options: options, cancelToken: cancelToken);
+    var res = await post(url, data: data, headers: headers, params: params, options: options, cancelToken: cancelToken);
     var responseEntity = ResponseEntity<T>.fromJson(res, factory: factory);
     return responseEntity;
   }
 
   /// patch method
-  Future<dynamic> patch(String url, {Map<String, dynamic>? params, Options? options, CancelToken? cancelToken}) async {
-    return _request(url, method: PATCH, params: params, options: options, cancelToken: cancelToken);
+  Future<dynamic> patch(
+    String url, {
+    Map<String, dynamic>? params,
+    Options? options,
+    CancelToken? cancelToken,
+    bool getResponse = false,
+  }) async {
+    return _request(url, method: PATCH, params: params, options: options, cancelToken: cancelToken, getResponse: getResponse);
   }
 
-  Future<dynamic> put(String url, {Map<String, dynamic>? params, Options? options, CancelToken? cancelToken}) async {
-    return _request(url, method: PUT, params: params, options: options, cancelToken: cancelToken);
+  Future<dynamic> put(
+    String url, {
+    Map<String, dynamic>? params,
+    Options? options,
+    CancelToken? cancelToken,
+    bool getResponse = false,
+  }) async {
+    return _request(url, method: PUT, params: params, options: options, cancelToken: cancelToken, getResponse: getResponse);
   }
 
-  Future<dynamic> putByOptionsJson(String url,
-      {dynamic data,
-      Map<String, dynamic>? params,
-      Options? options,
-      CancelToken? cancelToken,
-      ProgressCallback? onSendProgressCallback}) async {
+  Future<dynamic> putByOptionsJson(
+    String url, {
+    dynamic data,
+    Map<String, dynamic>? params,
+    Options? options,
+    CancelToken? cancelToken,
+    ProgressCallback? onSendProgressCallback,
+    bool getResponse = false,
+  }) async {
     options ??= Options();
     options.contentType = Headers.jsonContentType;
-    return _request(url,
-        method: PUT,
-        params: params,
-        data: data,
-        options: options,
-        cancelToken: cancelToken,
-        onSendProgressCallback: onSendProgressCallback);
+    return _request(
+      url,
+      method: PUT,
+      params: params,
+      data: data,
+      options: options,
+      cancelToken: cancelToken,
+      onSendProgressCallback: onSendProgressCallback,
+      getResponse: getResponse,
+    );
   }
 
   Future<T> patchEntity<T>(
@@ -225,14 +284,17 @@ class BaseHttp {
   }
 
   /// 发起网络请求
-  Future<dynamic> _request(String url,
-      {String? method,
-      dynamic data,
-      Map<String, dynamic>? params,
-      Options? options,
-      CancelToken? cancelToken,
-      Map<String, dynamic>? headers,
-      ProgressCallback? onSendProgressCallback}) async {
+  Future<dynamic> _request(
+    String url, {
+    String? method,
+    dynamic data,
+    Map<String, dynamic>? params,
+    Options? options,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    ProgressCallback? onSendProgressCallback,
+    bool getResponse = false, //返回未处理数据
+  }) async {
     String errorMsg = '';
     int statusCode = -1;
     Response? response = await _getResponse(url,
@@ -246,6 +308,9 @@ class BaseHttp {
         aDio: dio);
     Logger.debug('调用接口:  ----data=$data-------params=$params------------------------> $url '
         '---->response=：\n$response');
+    if (getResponse == true) {
+      return response;
+    }
 
     statusCode = response?.statusCode ?? -1;
     if (statusCode < 0) {
@@ -255,8 +320,6 @@ class BaseHttp {
     if (response?.data is Map<String, dynamic>) {
       Map<String, dynamic>? data = response?.data;
       int code = HttpCode.SUCCESS;
-      code = data?["code"] ?? HttpCode.SUCCESS;
-      // 4000：token过期 4001：未认证、或者token非法  4002：refresh_token过期
       if (code == HttpCode.TOKEN_4000 || code == HttpCode.TOKEN_4001) {
         // 这里token失效的操作放在拦截器中处理
       } else if (code != HttpCode.SUCCESS) {
@@ -283,32 +346,6 @@ class BaseHttp {
     return map ?? response?.data;
   }
 
-  /// 刷新token后，重新发请求
-  Future<dynamic> _retryRequest(String url,
-      {String? method,
-      dynamic data,
-      Map<String, dynamic>? params,
-      Options? options,
-      CancelToken? cancelToken,
-      ProgressCallback? onSendProgressCallback}) async {
-    String errorMsg = '';
-    int statusCode = -1;
-    Response? response = await _getResponse(url,
-        method: method,
-        data: data,
-        params: params,
-        options: options,
-        cancelToken: cancelToken,
-        onSendProgressCallback: onSendProgressCallback);
-    Logger.debug('!!!!!!刷新token!!!!!! 重新发请求 _retryRequest 调用接口: $url');
-    statusCode = response?.statusCode ?? -1;
-    if (statusCode < 0) {
-      errorMsg = 'Network request error, code: $statusCode';
-      throw HttpResponseNot200Exception(errorMsg);
-    }
-    return response;
-  }
-
   /// 返回重新请求响应体
   Future<Response?> _getResponse(String url,
       {String? method,
@@ -331,74 +368,120 @@ class BaseHttp {
     options ??= Options();
     options.headers = headers ?? {};
     options.headers ??= {};
-    // assert(() {
-    // Logger.debug("token: 'Bearer $accessToken'");
-    //   return true;
-    // }());
-    // options.headers?['Client-Type'] = options.headers?['Client-Type'] ?? 'PC'; // 设置客户端类型
-    //
-    packageInfo ??= await PackageInfo.fromPlatform();
-    var version = packageInfo?.version ?? '';
-    var buildNumber = packageInfo?.buildNumber ?? '';
-    //
-    // options.headers?['versionCode'] = '$version+$buildNumber';
-    // options.headers?['time'] = DateTime.now().millisecondsSinceEpoch;
-    //
-    // if (Platform.isAndroid && androidInfo != null) {
-    //   androidInfo ??= await DeviceInfoPlugin().androidInfo;
-    //   options.headers?['model'] = androidInfo?.model ?? '';
-    //   options.headers?['androidId'] = androidInfo?.androidId ?? '';
-    // }
-    //
-    // if (Platform.isIOS) {
-    //   iosInfo ??= await DeviceInfoPlugin().iosInfo;
-    //   options.headers?['model'] = iosInfo?.model ?? ''; //设备类型
-    //   options.headers?['iosId'] = iosInfo?.identifierForVendor ?? ''; //设备id
-    // }
-
-    // Logger.debug('option headers....   ${options.headers}');
     Logger.debug('>>>>>开始调用接口:'
         '$url-----headers=${options.headers}--params=$params--------data=$data--------------------->');
     switch (method) {
       case GET:
-        if (params != null && params.isNotEmpty) {
-          StringBuffer sb = StringBuffer('?');
-          params.forEach((key, value) {
-            if (value != null) {
-              sb.write('$key=$value&');
-            }
-          });
-          String paramStr = sb.toString();
-          paramStr = paramStr.substring(0, paramStr.length - 1);
-          url += paramStr;
-        }
-        response = await tokenDio.get(url, options: options, cancelToken: cancelToken);
+        response = await tokenDio.get(url, data: data, queryParameters: params, options: options, cancelToken: cancelToken);
         break;
       case POST:
-        if (params != null && params.isNotEmpty) {
-          response =
-              await tokenDio.post(url, data: params, options: options, cancelToken: cancelToken, onSendProgress: onSendProgressCallback);
-        } else if (data != null) {
-          response =
-              await tokenDio.post(url, data: data, options: options, cancelToken: cancelToken, onSendProgress: onSendProgressCallback);
-        } else {
-          response = await tokenDio.post(url, options: options, cancelToken: cancelToken, onSendProgress: onSendProgressCallback);
-        }
+        response = await tokenDio.post(url,
+            data: data, queryParameters: params, options: options, cancelToken: cancelToken, onSendProgress: onSendProgressCallback);
         break;
       case PATCH:
-        if (params != null && params.isNotEmpty) {
-          response = await tokenDio.patch(url, data: params, options: options, cancelToken: cancelToken);
-        }
+        response = await tokenDio.patch(url, data: data, queryParameters: params, options: options, cancelToken: cancelToken);
         break;
       case PUT:
-        response = await tokenDio.put(url, data: params, options: options, cancelToken: cancelToken);
+        response = await tokenDio.put(url, data: data, queryParameters: params, options: options, cancelToken: cancelToken);
         break;
       case DELETE:
-        response = await tokenDio.delete(url, data: params, options: options, cancelToken: cancelToken);
+        response = await tokenDio.delete(url, data: data, queryParameters: params, options: options, cancelToken: cancelToken);
         break;
       default:
         throw 'error';
     }
     return response;
+  }
+
+  static RegExp regx = RegExp(r'(?:\d\w)+');
+
+  /// 对请求参数预处理
+  void handleRequestData(String url, Map<String, dynamic> headers, Map options) {
+    Logger.debug('handleRequestData:  url=$url, headers=$headers, options=$options' );
+    if (options['form'] != null) {
+      headers['Content-Type'] = Headers.formUrlEncodedContentType;
+      List formBody = [];
+      for (final key in options['form'].keys) {
+        final value = options['form'][key];
+        String encodedKey = Uri.encodeComponent(key);
+        String encodedValue = Uri.encodeComponent(value);
+        formBody.add('$encodedKey=$encodedValue}');
+      }
+      options['body'] = formBody.join('&');
+      options.remove('form');
+    }
+    if (options['formData'] != null) {
+      headers['Content-Type'] = Headers.multipartFormDataContentType;
+
+      List formBody = [];
+      for (final key in options['formData'].keys) {
+        final value = options['formData'][key];
+        String encodedKey = Uri.encodeComponent(key);
+        String encodedValue = Uri.encodeComponent(value);
+        formBody.add('$encodedKey=$encodedValue}');
+      }
+      options['body'] = formBody;
+      options.remove('formData');
+    }
+    if (headers['Content-Type'] == Headers.jsonContentType && options['body'] != null) {
+      options['body'] = jsonEncode(options['body']);
+    }
+
+    if (headers.containsKey(AppConst.bHh)) {
+      final bytes = convert.hex.decode(AppConst.bHh);
+      String s = utf8.decode(bytes);
+      s = s.replaceAll(s.substring(s.length - 1), '');
+      s = utf8.decode(base64.decode(s));
+
+      String v = AppConst.version.split('-')[0].split('.').map((n) => n.length < 3 ? n.padLeft(3, '0') : n).join('');
+      String v2 = '';
+
+      List matches = regx.allMatches('$url$v').map((match) => match.group(0)).toList();
+      final jsonStr = json.encode(matches);
+      Logger.debug('正则匹配http最后两位 jsonStr:  $jsonStr');
+      String tempStr = _formatJson(jsonStr, 1);
+      tempStr = '$tempStr$v';
+      tempStr = base64.encode(utf8.encode(tempStr));
+      Logger.debug('base64处理  $tempStr');
+
+      final codec = ZLibCodec(raw: true);
+      final value = codec.encode(utf8.encode(tempStr));
+      Logger.debug('deflateRaw压缩算法  $value');
+      String hexString = value.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+      hexString = '$hexString&${int.parse(v)}$v2';
+      Logger.debug('计算最终结果： $hexString');
+      headers.remove(AppConst.bHh);
+      headers[s] = hexString;
+    }
+  }
+
+  static String _formatJson(String jsonString, int spaces) {
+    final indent = ' ' * spaces;
+    final buffer = StringBuffer();
+    var level = 0;
+
+    for (var i = 0; i < jsonString.length; i++) {
+      final char = jsonString[i];
+
+      if (char == '{' || char == '[') {
+        buffer.write(char);
+        buffer.write('\n');
+        level++;
+        buffer.write(indent * level);
+      } else if (char == '}' || char == ']') {
+        buffer.write('\n');
+        level--;
+        buffer.write(indent * level);
+        buffer.write(char);
+      } else if (char == ',') {
+        buffer.write(char);
+        buffer.write('\n');
+        buffer.write(indent * level);
+      } else {
+        buffer.write(char);
+      }
+    }
+
+    return buffer.toString();
   }
 }

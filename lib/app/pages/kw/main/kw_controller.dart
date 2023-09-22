@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/pages/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
-import 'package:lx_music_flutter/services/music_player_service.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
+
+
 
 class KWController extends GetxController {
 
