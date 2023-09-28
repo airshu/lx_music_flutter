@@ -6,6 +6,7 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/respository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:sqflite/utils/utils.dart';
@@ -13,6 +14,15 @@ import 'package:convert/convert.dart' as convert;
 
 class KWSongList {
   static const int limit_song = 10000;
+
+
+  static const String tagsUrl = 'http://wapi.kuwo.cn/api/pc/classify/playlist/getTagList?cmd=rcm_keyword_playlist&user=0&prod=kwplayer_pc_9.0.5.0&vipver=9.0.5.0&source=kwplayer_pc_9.0.5.0&loginUid=0&loginSid=0&appUid=76039576';
+  static const String hotTagUrl = 'http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmTagList?loginUid=0&loginSid=0&appUid=76039576';
+
+  static List<SortItem> sortList = [
+    SortItem(name: '最新', tid: 'new', id: 'new', isSelect: true),
+    SortItem(name: '最热', tid: 'hot', id: 'hot'),
+  ];
 
   static Future getSearch(String text, int page, int pageSize) async {
     String url =
@@ -477,6 +487,70 @@ class KWSongList {
     var result = await HttpCore.getInstance().get(url);
     Logger.debug('$result');
     return result['tagvalue'];
+  }
+
+  static Future getHotTag() async {
+    try {
+      var res = await HttpCore.getInstance().get(hotTagUrl);
+      Logger.debug(res);
+      if(res['code'] == 200) {
+        return filterInfoHotTag(res['data'][0]['data']);
+      }
+    } catch(e, s) {
+      Logger.error('$e $s');
+    }
+  }
+
+  static filterInfoHotTag(List rawList) {
+    return rawList.map((item) {
+      return {
+        'id': '${item['id']}-${item['digest']}',
+        'name': item['name'],
+        'source': 'kw',
+      };
+    });
+  }
+
+  static filterTagInfo(List rawList) {
+    return rawList.map((type) {
+      return {
+        'name': type['name'],
+        'list': type['data'].map(((item){
+          return {
+            'parent_id': type['id'],
+            'parent_name': type['name'],
+            'id': '${item['id']}-${item['digest']}',
+            'name': item['name'],
+            'source': 'kw',
+          };
+        })),
+      };
+    });
+  }
+
+  static Future getTag() async {
+    try {
+      var res = await HttpCore.getInstance().get(tagsUrl);
+      Logger.debug(res);
+      if(res['code'] == 200) {
+        return filterTagInfo(res['data']);
+      }
+    } catch(e, s) {
+      Logger.error('$e $s');
+    }
+
+  }
+
+  static Future getTags() async {
+    var res = await Future.wait([getTag(), getHotTag()]);
+    List list = [];
+    res.forEach((element) {
+      list.addAll(element.map((e) {
+        e['source'] = 'kw';
+        return e;
+      }).toList());
+    });
+    return list;
   }
 
   static Future getMusicUrlDirect(String songmid, String type) async {
