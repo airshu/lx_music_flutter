@@ -30,20 +30,21 @@ MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDgtQn2JZ34ZC28NWYpAUd98iZ37BUrX/aKzmFbt7cl
   }
 
   static String generateRandomString(int length) {
-    final random = Random();
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return String.fromCharCodes(List.generate(
-        length, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+    return Random().nextDouble().toString().substring(2,18);
   }
 
   static Map<String, dynamic> weapi(Map<String, dynamic> object) {
     final text = json.encode(object);
     final secretKey = generateRandomString(16);
-    final encryptedText = aesEncrypt(text, presetKey, iv);
+    final base64Str = base64Encode(text);
+    var params = base64Encode(aesEncrypt(base64Str, presetKey, iv));
+    params = aesEncrypt(params, presetKey, iv);
+
     final encryptedSecretKey = rsaEncrypt(secretKey, publicKey);
+    final encSecKey = EncryptUtil.base64ToHex(encryptedSecretKey);
     return {
-      'params': base64Encode(aesEncrypt(base64Encode(encryptedText), presetKey, iv)),
-      'encSecKey': EncryptUtil.base64ToHex(encryptedSecretKey),
+      'params': params,
+      'encSecKey': encSecKey,
     };
   }
 

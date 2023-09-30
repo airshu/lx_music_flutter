@@ -69,7 +69,8 @@ class WYLeaderBoard {
 
   static Future getData(String id) async {
     String url = 'https://music.163.com/weapi/v3/playlist/detail';
-    var result = await HttpCore.getInstance().post(url, data: CryptoUtils.weapi({'id': id, 'n': 100000, 'p': 1}), getResponse: true);
+    var data = CryptoUtils.weapi({'id': id, 'n': 100000, 'p': 1});
+    var result = await HttpCore.getInstance().post(url, data: data, getResponse: true);
     return result;
   }
 
