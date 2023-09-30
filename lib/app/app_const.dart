@@ -1,3 +1,10 @@
+import 'package:lx_music_flutter/app/respository/kg/kg_song_list.dart';
+import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/app/respository/mg/mg_song_list.dart';
+import 'package:lx_music_flutter/app/respository/tx/tx_song_list.dart';
+import 'package:lx_music_flutter/app/respository/wy/wy_song_list.dart';
+import 'package:lx_music_flutter/models/song_list.dart';
+
 /// 全局常量
 class AppConst {
 
@@ -19,15 +26,23 @@ class AppConst {
   static const String nameKG = '小枸音乐';
   static const String nameWY = '小芸音乐';
   static const String nameMG = '小蜜音乐';
-  static const String nameQQ = '小秋音乐';
+  static const String nameTX = '小秋音乐';
 
   static const List platformNames = [
     nameKW,
     nameKG,
     nameWY,
     nameMG,
-    nameQQ,
+    nameTX,
   ];
+
+  static Map<String, List<SortItem>> sortListMap = {
+    AppConst.nameKW: KWSongList.sortList,
+    AppConst.nameKG: KGSongList.sortList,
+    AppConst.nameMG: MGSongList.sortList,
+    AppConst.nameTX: TXSongList.sortList,
+    AppConst.nameWY: WYSongList.sortList,
+  };
 }
 
 /// 所有url

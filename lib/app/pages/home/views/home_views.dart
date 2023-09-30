@@ -37,15 +37,13 @@ class _HomeViewsState extends State<HomeViews> {
         pages[index] ??= SearchViewWidget(title: '搜索'.tr);
         break;
       case 1:
-        pages[index] ??= KWView(
-          title: '歌单'.tr,
-        );
+        pages[index] ??= SongListView(title: '歌单'.tr);
         break;
       case 2:
         pages[index] ??= LeaderBoardWidget(title: '排行榜'.tr);
         break;
       case 3:
-        pages[index] ??= ProfileView(title: '设置'.tr);
+        pages[index] ??= SettingView(title: '设置'.tr);
         break;
     }
     return pages[index]!;
@@ -60,7 +58,7 @@ class _HomeViewsState extends State<HomeViews> {
       body: Obx(
         () => getPage(controller.currentIndex.value),
       ),
-      drawer: getDrawer(),
+      drawer: buildDrawer(),
       // bottomNavigationBar: Obx(
       //   () => BottomNavigationBar(
       //     currentIndex: controller.currentIndex.value,
@@ -86,7 +84,7 @@ class _HomeViewsState extends State<HomeViews> {
     );
   }
 
-  Widget getDrawer() {
+  Widget buildDrawer() {
     return Builder(builder: (context) {
       return Drawer(
           child: ListView(

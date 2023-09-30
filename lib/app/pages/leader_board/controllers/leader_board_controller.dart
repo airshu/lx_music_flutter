@@ -42,7 +42,7 @@ class LeaderBoardController extends GetxController {
         var result = await MGLeaderBoard.getList(board.bangid, page);
         songList.value = result['list'];
         break;
-      case AppConst.nameQQ:
+      case AppConst.nameTX:
         var result = await TxLeaderBoard.getList(board.bangid, page);
         songList.value = result['list'];
         break;
@@ -71,7 +71,7 @@ class LeaderBoardController extends GetxController {
       case AppConst.nameMG:
         boardList.value = MGLeaderBoard.boardList;
         break;
-      case AppConst.nameQQ:
+      case AppConst.nameTX:
         boardList.value = TxLeaderBoard.boardList;
         break;
     }

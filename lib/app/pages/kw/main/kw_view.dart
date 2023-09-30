@@ -97,16 +97,15 @@ class _KWViewState extends State<KWView> {
       );
     }
 
-    return Row(
+    return Column(
       children: [
-        Expanded(
-            flex: 1,
-            child: ListView.builder(
-              itemBuilder: (context, index) {
-                return buildItem(index);
-              },
-              itemCount: KWLeaderBoard.boardList.length,
-            )),
+        Row(
+          children: [
+            buildTopLeftBottons(),
+            Spacer(),
+            buildTopRightButton(),
+          ],
+        ),
         Expanded(
           flex: 3,
           child: Obx(
@@ -119,6 +118,43 @@ class _KWViewState extends State<KWView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget buildTopLeftBottons() {
+    List<bool> _selecteds = [false, false, true];
+    return ToggleButtons(
+      isSelected: _selecteds,
+      children: <Widget>[
+        Text('ddd'),
+        Icon(Icons.fastfood),
+        Icon(Icons.cake),
+      ],
+      onPressed: (index) {
+        setState(() {
+          _selecteds[index] = !_selecteds[index];
+        });
+      },
+    );
+
+  }
+
+  Widget buildTopRightButton() {
+    List<DropdownMenuItem> children = [];
+    AppConst.platformNames.forEach((element) {
+      children.add(
+        DropdownMenuItem(
+          child: Text(element),
+          value: element,
+        ),
+      );
+    });
+    return DropdownButton(
+      value: kwController.currentPlatform.value,
+      items: children,
+      onChanged: (value) {
+        kwController.changePlatform(value.toString());
+      },
     );
   }
 
