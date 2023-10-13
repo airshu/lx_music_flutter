@@ -87,7 +87,7 @@ class KWSongList {
         'img': result['pic'],
         'desc': result['info'],
         'author': result['uname'],
-        'play_count': formatPlayCount(result['playnum']),
+        'play_count': AppUtil.formatPlayCount(result['playnum']),
       },
     };
   }
@@ -200,20 +200,12 @@ class KWSongList {
         'img': result['pic'],
         'desc': result['info'],
         'author': result['uname'],
-        'play_count': formatPlayCount(result['playnum']),
+        'play_count': AppUtil.formatPlayCount(result['playnum']),
       },
     };
   }
 
-  static String formatPlayCount(int num) {
-    if (num > 100000000) {
-      return '${(num / 10000000).truncateToDouble() / 10}亿';
-    }
-    if (num > 10000) {
-      return '${(num / 1000).truncateToDouble() / 10}万';
-    }
-    return num.toString();
-  }
+
 
   static List<Map<String, dynamic>> filterListDetail(List<dynamic> rawData) {
     return rawData.map((item) {
@@ -543,14 +535,19 @@ class KWSongList {
 
   static Future getTags() async {
     var res = await Future.wait([getTag(), getHotTag()]);
-    List list = [];
-    res.forEach((element) {
-      list.addAll(element.map((e) {
-        e['source'] = 'kw';
-        return e;
-      }).toList());
-    });
-    return list;
+    return {
+      'tags': res[0].toList(),
+      'hotTags': res[1].toList(),
+      'source': 'kw',
+    };
+    // List list = [];
+    // res.forEach((element) {
+    //   list.addAll(element.map((e) {
+    //     e['source'] = 'kw';
+    //     return e;
+    //   }).toList());
+    // });
+    // return list;
   }
 
   static Future getMusicUrlDirect(String songmid, String type) async {
@@ -669,4 +666,6 @@ class KWSongList {
     final compressed = codec.encode(input);
     return compressed;
   }
+
+  static getList() {}
 }

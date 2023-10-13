@@ -1,9 +1,8 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lx_music_flutter/app/pages/kw/song_list/kw_list_controller.dart';
+import 'package:lx_music_flutter/app/pages/platforms/kw/song_list/kw_list_controller.dart';
 
-import '../../../../utils/toast_util.dart';
 
 class KWListView extends StatefulWidget {
   const KWListView({super.key, required this.playlistid});

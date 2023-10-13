@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
-import 'package:lx_music_flutter/app/pages/kw/kw_leader_board.dart';
+import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/pages/search/views/search_view.dart';
 import 'package:lx_music_flutter/app/pages/song_list/controllers/song_list_controller.dart';
 import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
@@ -67,40 +67,6 @@ class _SongListState extends State<SongListView> {
       );
     }
 
-    Widget buildRightItem(int index) {
-      if (songListController.songList.length <= index) return Container();
-      final item = songListController.songList.elementAt(index);
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () async {
-          String songmid = item['songmid'];
-          for (var t in item['types']) {
-            var result = await KWSongList.getMusicUrlDirect(songmid, t['type']);
-            if (result['url'] != null && result['url'].isNotEmpty) {
-              print('$songmid  ${t['type']}=======>>>>>>result=$result');
-              item.url = result['url'];
-            }
-            return;
-          }
-        },
-        child: Container(
-          height: 26,
-          child: Row(
-            children: [
-              Expanded(
-                  child: Text(
-                '${item['name']}',
-                overflow: TextOverflow.ellipsis,
-              )),
-              // Text('${item['singer']}'),
-              // Text('${item['albumName']}'),
-              Text('${item['interval']}'),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       drawer: buildDrawer(),
       body: Column(
@@ -108,22 +74,23 @@ class _SongListState extends State<SongListView> {
           Row(
             children: [
               Expanded(
-                child: SingleChildScrollView(child: buildTopLeftBottons(), scrollDirection: Axis.horizontal),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: buildTopLeftButtons(),
+                ),
               ),
               Builder(builder: (ctx) {
                 return Container(
+                  margin: const EdgeInsets.only(left: 12, right: 12),
                   child: ElevatedButton(
                       onPressed: () {
                         Scaffold.of(ctx).openDrawer();
                       },
-                      child: Text('默认')),
-                  margin: EdgeInsets.only(left: 12, right: 12),
+                      child: Obx(() => Text(songListController.currentTag['name'] ?? '默认'))),
                 );
               }),
               buildTopRightButton(),
-              const SizedBox(
-                width: 10,
-              ),
+              const SizedBox(width: 10),
             ],
           ),
           Expanded(
@@ -131,7 +98,7 @@ class _SongListState extends State<SongListView> {
             child: Obx(
               () => ListView.builder(
                 itemBuilder: (context, index) {
-                  return buildRightItem(index);
+                  return buildSongItem(index);
                 },
                 itemCount: songListController.songList.length,
               ),
@@ -142,26 +109,61 @@ class _SongListState extends State<SongListView> {
     );
   }
 
-  Widget buildTopLeftBottons() {
+  Widget buildSongItem(int index) {
+    if (songListController.songList.length <= index) return Container();
+    final item = songListController.songList.elementAt(index);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        String songmid = item['songmid'];
+        for (var t in item['types']) {
+          var result = await KWSongList.getMusicUrlDirect(songmid, t['type']);
+          if (result['url'] != null && result['url'].isNotEmpty) {
+            print('$songmid  ${t['type']}=======>>>>>>result=$result');
+            item.url = result['url'];
+          }
+          return;
+        }
+      },
+      child: Container(
+        height: 26,
+        child: Row(
+          children: [
+            Expanded(
+                child: Text(
+              '${item['name']}',
+              overflow: TextOverflow.ellipsis,
+            )),
+            // Text('${item['singer']}'),
+            // Text('${item['albumName']}'),
+            Text('${item['interval']}'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildTopLeftButtons() {
     return Obx(
       () {
         List<Widget> children = [];
-        songListController.sortList.forEach((element) {
+        for (var element in songListController.sortList) {
           children.add(Text(element.name));
-        });
+        }
         return ToggleButtons(
           isSelected: songListController.sortList.map((element) => element.isSelect).toList(),
           children: children,
           onPressed: (index) {
-            setState(() {
-              for (int i = 0; i < songListController.sortList.length; i++) {
-                if (i == index) {
-                  songListController.sortList[i].isSelect = true;
-                } else {
-                  songListController.sortList[i].isSelect = false;
-                }
+            for (int i = 0; i < songListController.sortList.length; i++) {
+              if (i == index) {
+                songListController.sortList[i].isSelect = true;
+              } else {
+                songListController.sortList[i].isSelect = false;
               }
-            });
+            }
+            // setState(() {
+            //
+            // });
           },
         );
       },
@@ -170,14 +172,14 @@ class _SongListState extends State<SongListView> {
 
   Widget buildTopRightButton() {
     List<DropdownMenuItem> children = [];
-    AppConst.platformNames.forEach((element) {
+    for (var element in AppConst.platformNames) {
       children.add(
         DropdownMenuItem(
-          child: Text(element),
           value: element,
+          child: Text(element),
         ),
       );
-    });
+    }
     return DropdownButton(
       value: songListController.currentPlatform.value,
       items: children,
@@ -188,58 +190,76 @@ class _SongListState extends State<SongListView> {
   }
 
   Widget buildDrawer() {
-    List<Widget> children = [];
-    for (var element in songListController.tagList.value) {
-      if(element['list'] == null || element['list'].isEmpty) {
-        continue;
-      }
-
-      children.add(Container(
-          alignment: Alignment.centerLeft,
-          margin: const EdgeInsets.only(bottom: 8, top: 8),
-          child: Text(
-            element['name'],
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          )));
-
-      List<Widget> tags = [];
-      if (element['list'] != null) {
-        element['list'].forEach((item) {
-          tags.add(
-            GestureDetector(
-              onTap: (){
-                songListController.openTag(item);
-              },
-              child: Container(
-                color: Colors.grey[200],
-                // margin: EdgeInsets.only(left: 4, right: 0, top: 4, bottom: 4),
-                padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
-                child: Text(item['name']),
-              ),
-            ),
-          );
-        });
-        children.add(Container(
-          margin: const EdgeInsets.only(left: 8, right: 8),
-          child: Wrap(
-            alignment: WrapAlignment.start,
-            runAlignment: WrapAlignment.start,
-            crossAxisAlignment: WrapCrossAlignment.start,
-            spacing: 8,
-            runSpacing: 8,
-            children: tags,
-          ),
-        ));
-      }
+    void openTag(BuildContext context, Map item) {
+      songListController.openTag(item);
+      Scaffold.of(context).closeDrawer();
     }
-    children.add(const SizedBox(height: 10,));
-    return Drawer(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
+
+    List<Widget> buildList(List list) {
+      List<Widget> children = [];
+      for (var element in list) {
+        if (element['list'] == null || element['list'].isEmpty) {
+          continue;
+        }
+
+        children.add(Container(
+            alignment: Alignment.centerLeft,
+            margin: const EdgeInsets.only(bottom: 8, top: 8),
+            child: Text(
+              element['name'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            )));
+
+        List<Widget> tags = [];
+        if (element['list'] != null) {
+          element['list'].forEach((item) {
+            tags.add(
+              Builder(builder: (ctx) {
+                return GestureDetector(
+                  onTap: () {
+                    openTag(ctx, item);
+                  },
+                  child: Container(
+                    color: Colors.grey[200],
+                    // margin: EdgeInsets.only(left: 4, right: 0, top: 4, bottom: 4),
+                    padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+                    child: Text(item['name']),
+                  ),
+                );
+              }),
+            );
+          });
+          children.add(Container(
+            margin: const EdgeInsets.only(left: 8, right: 8),
+            child: Wrap(
+              alignment: WrapAlignment.start,
+              runAlignment: WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.start,
+              spacing: 8,
+              runSpacing: 8,
+              children: tags,
+            ),
+          ));
+        }
+      }
+      return children;
+    }
+
+    return Obx(() {
+      List<Widget> children = [];
+
+      children.addAll(buildList(songListController.tagList.value['hotTags']));
+      children.addAll(buildList(songListController.tagList.value['tags']));
+
+      children.add(const SizedBox(height: 10));
+      return Drawer(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

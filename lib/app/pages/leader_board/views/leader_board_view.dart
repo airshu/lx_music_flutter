@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
-import 'package:lx_music_flutter/app/pages/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/pages/leader_board/controllers/leader_board_controller.dart';
 import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';

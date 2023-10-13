@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
-import 'package:lx_music_flutter/app/pages/kg/kg_leader_board.dart';
-import 'package:lx_music_flutter/app/pages/kw/kw_leader_board.dart';
-import 'package:lx_music_flutter/app/pages/mg/mg_leader_board.dart';
-import 'package:lx_music_flutter/app/pages/tx/tx_leader_board.dart';
-import 'package:lx_music_flutter/app/pages/wy/wy_leader_board.dart';
+import 'package:lx_music_flutter/app/pages/platforms/kg/kg_leader_board.dart';
+import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
+import 'package:lx_music_flutter/app/pages/platforms/mg/mg_leader_board.dart';
+import 'package:lx_music_flutter/app/pages/platforms/tx/tx_leader_board.dart';
+import 'package:lx_music_flutter/app/pages/platforms/wy/wy_leader_board.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 

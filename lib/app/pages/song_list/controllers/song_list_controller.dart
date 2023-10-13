@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
-import 'package:lx_music_flutter/app/pages/kw/kw_leader_board.dart';
+import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/respository/kg/kg_song_list.dart';
 import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/app/respository/mg/mg_song_list.dart';
@@ -22,8 +22,15 @@ class SongListController extends GetxController {
 
   /// 当前选中的平台
   final currentPlatform = ''.obs;
+  /// 选中的标签
+  final currentTag = {}.obs;
 
-  final tagList = [].obs;
+  /// {
+  /// 'tags': [],
+  /// 'hotTags': [],
+  /// 'source': '',
+  /// }
+  final tagList = {}.obs;
   final sortList = <SortItem>[].obs;
 
   @override
@@ -57,18 +64,64 @@ class SongListController extends GetxController {
     currentPlatform.value = name;
     sortList.value = AppConst.sortListMap[name]!;
 
+    var res;
     switch (name) {
+      case AppConst.nameWY:
+        res = await WYSongList.getTags();//todo
+        break;
+      case AppConst.nameMG:
+        res = await MGSongList.getTags();
+        break;
       case AppConst.nameKW:
-        var res = await KWSongList.getTags();
-        for(var item in res) {
-          print('item   $item');
-        }
-        tagList.value = res;
+        res = await KWSongList.getTags();
+        break;
+      case AppConst.nameKG:
+        res = await KGSongList.getTags();
+        break;
+      case AppConst.nameTX:
+        res = await TXSongList.getTags();
         break;
     }
+    for(var item in res['hotTags']) {
+      Logger.debug('hotTags  $item');
+    }
+    for(var item in res['tags']) {
+      Logger.debug(item['name']);
+      for(var e in item['list']) {
+        Logger.debug('e  $e');
+      }
+    }
+    // print('res   $res' );
+    tagList.value = res;
   }
 
-  void openTag(item) {
+  /// 选择某个标签
+  Future<void> openTag(item) async {
+    Logger.debug('openTag  ==== $item');
+    int sortId = 0;
+    String tagId = item['id'].toString();
+    page = 0;
+    var res;
+    switch (currentPlatform.value) {
+      case AppConst.nameWY:
+        res = await WYSongList.getList();//todo
+        break;
+      case AppConst.nameMG:
+        res = await MGSongList.getList();
+        break;
+      case AppConst.nameKW:
+        res = await KWSongList.getList();
+        break;
+      case AppConst.nameKG:
+        res = await KGSongList.getList(sortId.toString(), tagId, page);
+        break;
+      case AppConst.nameTX:
+        res = await TXSongList.getList();
+        break;
+    }
+    print('=======$res');
 
+    songList.value = res;
+    currentTag.value = item;
   }
 }

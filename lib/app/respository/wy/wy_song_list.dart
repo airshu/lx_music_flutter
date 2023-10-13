@@ -22,4 +22,18 @@ class WYSongList {
     var result = await HttpCore.getInstance().post(url, data: CryptoUtils.weapi({}));
     Logger.debug('$result');
   }
+
+
+  static Future getTags() async {
+
+    var res = await Future.wait([getTag(), getHotTag()]);
+    return {
+      'tags': res[0],
+      'hotTags': res[1],
+      'source': 'wy',
+    };
+  }
+
+  static getList() {}
+
 }

@@ -1,8 +1,7 @@
 import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
-
-import '../../respository/kw/kw_song_list.dart';
 
 class KWLeaderBoard {
   static List<Board> list = [

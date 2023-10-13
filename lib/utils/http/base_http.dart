@@ -63,7 +63,8 @@ class BaseHttp {
   }) async {
     options ??= Options();
     options.extra ??= {};
-    handleRequestData(url, headers ?? {}, options.extra!);
+    headers = headers ??= {};
+    handleRequestData(url, headers, options.extra!, GET);
     return _request(
       url,
       method: GET,
@@ -87,7 +88,7 @@ class BaseHttp {
   }) async {
     options ??= Options();
     options.extra ??= {};
-    handleRequestData(url, headers ?? {}, options.extra!);
+    handleRequestData(url, headers ?? {}, options.extra!, GET);
 
     var responseEntity = await getResponseEntity<T>(url, factory,
         headers: headers, params: params, options: options, cancelToken: cancelToken, getResponse: getResponse);
@@ -127,7 +128,8 @@ class BaseHttp {
   }) async {
     options ??= Options();
     options.extra ??= {};
-    handleRequestData(url, headers ?? {}, options.extra!);
+    headers = headers ??= {};
+    handleRequestData(url, headers, options.extra!, POST);
 
     return _request(
       url,
@@ -160,14 +162,44 @@ class BaseHttp {
   /// 设置json格式
   Future<dynamic> postByOptionsJson(String url,
       {dynamic data,
+      Map<String, dynamic>? headers,
       Map<String, dynamic>? params,
       Options? options,
       CancelToken? cancelToken,
       ProgressCallback? onSendProgressCallback}) async {
     options ??= Options();
     options.contentType = Headers.jsonContentType;
+
+    options.extra ??= {};
+    headers = headers ??= {};
+    handleRequestData(url, headers, options.extra!, POST);
     return _request(url,
         method: POST,
+        headers: headers,
+        params: params,
+        data: data,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgressCallback: onSendProgressCallback);
+  }
+
+  Future<dynamic> getByOptionsJson(String url,
+      {dynamic data,
+      Map<String, dynamic>? headers,
+      Map<String, dynamic>? params,
+      Options? options,
+      CancelToken? cancelToken,
+      ProgressCallback? onSendProgressCallback}) async {
+    options ??= Options();
+    options.contentType = Headers.jsonContentType;
+
+    options.extra ??= {};
+    headers ??= {};
+    handleRequestData(url, headers, options.extra!, GET);
+
+    return _request(url,
+        method: GET,
+        headers: headers,
         params: params,
         data: data,
         options: options,
@@ -186,7 +218,8 @@ class BaseHttp {
   }) async {
     options ??= Options();
     options.extra ??= {};
-    handleRequestData(url, headers ?? {}, options.extra!);
+    headers = headers ??= {};
+    handleRequestData(url, headers, options.extra!, POST);
 
     var responseEntity = await postResponseEntity<T>(url, factory,
         data: data, headers: headers, params: params, options: options, cancelToken: cancelToken);
@@ -306,8 +339,7 @@ class BaseHttp {
         cancelToken: cancelToken,
         onSendProgressCallback: onSendProgressCallback,
         aDio: dio);
-    Logger.debug('调用接口:  ----data=$data-------params=$params------------------------> $url '
-        '---->response=：\n$response');
+    Logger.debug('调用接口:  ----data=$data-------params=$params------------------------> $url ');
     if (getResponse == true) {
       return response;
     }
@@ -320,17 +352,6 @@ class BaseHttp {
     if (response?.data is Map<String, dynamic>) {
       Map<String, dynamic>? data = response?.data;
       int code = HttpCode.SUCCESS;
-      if (code == HttpCode.TOKEN_4000 || code == HttpCode.TOKEN_4001) {
-        // 这里token失效的操作放在拦截器中处理
-      } else if (code != HttpCode.SUCCESS) {
-        // account.InvalidToken 用户token失效
-        // UserUtil.cleanAccessToken();
-        // accessToken = null;
-        // refreshToken = null;
-        // // 跳转到登陆页面
-        // xp_get.Get.offAllNamed(PadAppPages.INITIAL);
-        // 在刷新token时才跳转至登陆页面
-      }
       return response?.data;
     }
     Map<String, dynamic>? map;
@@ -396,33 +417,38 @@ class BaseHttp {
   static RegExp regx = RegExp(r'(?:\d\w)+');
 
   /// 对请求参数预处理
-  void handleRequestData(String url, Map<String, dynamic> headers, Map options) {
-    Logger.debug('handleRequestData:  url=$url, headers=$headers, options=$options' );
-    if (options['form'] != null) {
-      headers['Content-Type'] = Headers.formUrlEncodedContentType;
-      List formBody = [];
-      for (final key in options['form'].keys) {
-        final value = options['form'][key];
-        String encodedKey = Uri.encodeComponent(key);
-        String encodedValue = Uri.encodeComponent(value);
-        formBody.add('$encodedKey=$encodedValue}');
-      }
-      options['body'] = formBody.join('&');
-      options.remove('form');
-    }
-    if (options['formData'] != null) {
-      headers['Content-Type'] = Headers.multipartFormDataContentType;
+  void handleRequestData(String url, Map<String, dynamic> headers, Map options, String method) {
+    Logger.debug('handleRequestData:  url=$url, headers=$headers, options=$options');
+    if(method == POST) {
+      if (options['form'] != null) {
+        headers['Content-Type'] = Headers.formUrlEncodedContentType;
+        List formBody = [];
+        for (final key in options['form'].keys) {
+          final value = options['form'][key];
+          String encodedKey = Uri.encodeComponent(key);
+          String encodedValue = Uri.encodeComponent(value);
+          formBody.add('$encodedKey=$encodedValue}');
+        }
+        options['body'] = formBody.join('&');
+        options.remove('form');
+      } else if (options['formData'] != null) {
+        headers['Content-Type'] = Headers.multipartFormDataContentType;
 
-      List formBody = [];
-      for (final key in options['formData'].keys) {
-        final value = options['formData'][key];
-        String encodedKey = Uri.encodeComponent(key);
-        String encodedValue = Uri.encodeComponent(value);
-        formBody.add('$encodedKey=$encodedValue}');
+        List formBody = [];
+        for (final key in options['formData'].keys) {
+          final value = options['formData'][key];
+          String encodedKey = Uri.encodeComponent(key);
+          String encodedValue = Uri.encodeComponent(value);
+          formBody.add('$encodedKey=$encodedValue}');
+        }
+        options['body'] = formBody;
+        options.remove('formData');
+      } else {
+        headers['Content-Type'] = Headers.jsonContentType;
       }
-      options['body'] = formBody;
-      options.remove('formData');
     }
+
+
     if (headers['Content-Type'] == Headers.jsonContentType && options['body'] != null) {
       options['body'] = jsonEncode(options['body']);
     }
@@ -452,6 +478,10 @@ class BaseHttp {
       Logger.debug('计算最终结果： $hexString');
       headers.remove(AppConst.bHh);
       headers[s] = hexString;
+    }
+    if (!headers.containsKey('User-Agent')) {
+      headers['User-Agent'] =
+          'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36';
     }
   }
 

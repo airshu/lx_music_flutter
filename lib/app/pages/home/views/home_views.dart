@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
-import 'package:lx_music_flutter/app/pages/kw/main/kw_view.dart';
 import 'package:lx_music_flutter/app/pages/leader_board/views/leader_board_view.dart';
-import 'package:lx_music_flutter/app/pages/profile/views/profile_view.dart';
 import 'package:lx_music_flutter/app/pages/search/views/search_view.dart';
 import 'package:lx_music_flutter/app/pages/song_list/views/song_list_view.dart';
 
