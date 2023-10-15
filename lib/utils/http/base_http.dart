@@ -4,8 +4,6 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:get/get.dart' as xp_get;
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/utils/http/entity.dart';
 import 'package:lx_music_flutter/utils/http/http_exception.dart';
@@ -64,7 +62,7 @@ class BaseHttp {
     options ??= Options();
     options.extra ??= {};
     headers = headers ??= {};
-    handleRequestData(url, headers, options.extra!, GET);
+    // handleRequestData(url, headers, options.extra!, GET);
     return _request(
       url,
       method: GET,
@@ -339,10 +337,11 @@ class BaseHttp {
         cancelToken: cancelToken,
         onSendProgressCallback: onSendProgressCallback,
         aDio: dio);
-    Logger.debug('调用接口:  ----data=$data-------params=$params------------------------> $url ');
     if (getResponse == true) {
       return response;
     }
+
+    Logger.debug('调用接口:  ----data=$data-------params=$params------------------------> $url ');
 
     statusCode = response?.statusCode ?? -1;
     if (statusCode < 0) {
@@ -359,9 +358,9 @@ class BaseHttp {
       map = json.decode(response?.data);
     } catch (error) {
       try {
-        map = json.decode(response?.data);
+        map = jsonDecode(response?.data);
       } catch (error) {
-        Logger.debug('===http error===> $error');
+        // Logger.debug('===http error===> $error');
       }
     }
     return map ?? response?.data;
@@ -418,8 +417,8 @@ class BaseHttp {
 
   /// 对请求参数预处理
   void handleRequestData(String url, Map<String, dynamic> headers, Map options, String method) {
-    Logger.debug('handleRequestData:  url=$url, headers=$headers, options=$options');
     if(method == POST) {
+    Logger.debug('handleRequestData:  url=$url, headers=$headers, options=$options');
       if (options['form'] != null) {
         headers['Content-Type'] = Headers.formUrlEncodedContentType;
         List formBody = [];

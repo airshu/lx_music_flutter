@@ -180,12 +180,14 @@ class _SongListState extends State<SongListView> {
         ),
       );
     }
-    return DropdownButton(
-      value: songListController.currentPlatform.value,
-      items: children,
-      onChanged: (value) {
-        songListController.changePlatform(value.toString());
-      },
+    return Obx(
+      () => DropdownButton(
+        value: songListController.currentPlatform.value,
+        items: children,
+        onChanged: (value) {
+          songListController.changePlatform(value.toString());
+        },
+      ),
     );
   }
 

@@ -1,7 +1,13 @@
+import 'package:dio/dio.dart';
+import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
 class MGSongList {
+
+  static const int limit_list = 10;
+  static const int limit_song = 30;
+
   static List<SortItem> sortList = [
     SortItem(name: '推荐', tid: 'recommend', id: '15127315', isSelect: true),
     SortItem(name: '最新', tid: 'new', id: '15127272'),
@@ -52,5 +58,43 @@ class MGSongList {
     };
   }
 
-  static Future getList() async {}
+  static Future getList([String? sortId, String? tagId, int page = 0]) async {
+    String url = getSongListUrl(sortId, tagId, page);
+    var res = await HttpCore.getInstance().get(url, headers: defaultHeaders);
+    if(res['retCode'] == '100000') {
+      return {
+        'list': filterList(res['retMsg']['playlist']),
+        'total': int.parse(res['retMsg']['countSize']),
+        'limit':  limit_list,
+        'source': 'mg',
+      };
+    }
+  }
+
+  static String getSongListUrl([String? sortId, String? tagId, int page = 0]) {
+    if(tagId == null) {
+      return 'https://m.music.migu.cn/migu/remoting/playlist_bycolumnid_tag?playListType=2&type=1&columnId=${sortId}&startIndex=${(page - 1) * 10}';
+    }
+    return 'https://m.music.migu.cn/migu/remoting/playlist_bycolumnid_tag?playListType=2&type=1&tagId=${tagId}&startIndex=${(page - 1) * 10}';
+  }
+
+  static filterList(List rawData) {
+    List list = [];
+    for (var item in rawData) {
+      list.add({
+        'play_count': AppUtil.formatPlayCount(item['playCount']),
+        'id': item['playListId'],
+        'author': item['createName'],
+        'name': item['playListName'],
+        'time': AppUtil.dateFormat(item['createTime'], 'Y-M-D'),
+        'img': item['image'],
+        'grade': item['grade'],
+        'total': item['contentCount'],
+        'desc': item['summary'],
+        'source': 'mg',
+      });
+    }
+    return list;
+  }
+
 }

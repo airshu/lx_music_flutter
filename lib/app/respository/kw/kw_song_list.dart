@@ -14,9 +14,10 @@ import 'package:convert/convert.dart' as convert;
 
 class KWSongList {
   static const int limit_song = 10000;
+  static const int limit_list = 36;
 
-
-  static const String tagsUrl = 'http://wapi.kuwo.cn/api/pc/classify/playlist/getTagList?cmd=rcm_keyword_playlist&user=0&prod=kwplayer_pc_9.0.5.0&vipver=9.0.5.0&source=kwplayer_pc_9.0.5.0&loginUid=0&loginSid=0&appUid=76039576';
+  static const String tagsUrl =
+      'http://wapi.kuwo.cn/api/pc/classify/playlist/getTagList?cmd=rcm_keyword_playlist&user=0&prod=kwplayer_pc_9.0.5.0&vipver=9.0.5.0&source=kwplayer_pc_9.0.5.0&loginUid=0&loginSid=0&appUid=76039576';
   static const String hotTagUrl = 'http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmTagList?loginUid=0&loginSid=0&appUid=76039576';
 
   static List<SortItem> sortList = [
@@ -204,8 +205,6 @@ class KWSongList {
       },
     };
   }
-
-
 
   static List<Map<String, dynamic>> filterListDetail(List<dynamic> rawData) {
     return rawData.map((item) {
@@ -485,10 +484,10 @@ class KWSongList {
     try {
       var res = await HttpCore.getInstance().get(hotTagUrl);
       Logger.debug(res);
-      if(res['code'] == 200) {
+      if (res['code'] == 200) {
         return filterInfoHotTag(res['data'][0]['data']);
       }
-    } catch(e, s) {
+    } catch (e, s) {
       Logger.error('$e $s');
     }
   }
@@ -500,14 +499,14 @@ class KWSongList {
         'name': item['name'],
         'source': 'kw',
       };
-    });
+    }).toList();
   }
 
   static filterTagInfo(List rawList) {
     return rawList.map((type) {
       return {
         'name': type['name'],
-        'list': type['data'].map(((item){
+        'list': type['data'].map(((item) {
           return {
             'parent_id': type['id'],
             'parent_name': type['name'],
@@ -517,29 +516,34 @@ class KWSongList {
           };
         })),
       };
-    });
+    }).toList();
   }
 
   static Future getTag() async {
     try {
       var res = await HttpCore.getInstance().get(tagsUrl);
       Logger.debug(res);
-      if(res['code'] == 200) {
+      if (res['code'] == 200) {
         return filterTagInfo(res['data']);
       }
-    } catch(e, s) {
+    } catch (e, s) {
       Logger.error('$e $s');
     }
-
   }
 
   static Future getTags() async {
-    var res = await Future.wait([getTag(), getHotTag()]);
-    return {
-      'tags': res[0].toList(),
-      'hotTags': res[1].toList(),
-      'source': 'kw',
-    };
+    try {
+      var tags = await getTag();
+      var hotTags = await getHotTag();
+      return {
+        'tags': tags ?? [],
+        'hotTags': hotTags ?? [],
+        'source': 'kw',
+      };
+    } catch (e, s) {
+      Logger.error('$e  $s');
+    }
+
     // List list = [];
     // res.forEach((element) {
     //   list.addAll(element.map((e) {
@@ -667,5 +671,94 @@ class KWSongList {
     return compressed;
   }
 
-  static getList() {}
+  static Future getList([String? sortId, String? tagId, int page = 0]) async {
+    dynamic id;
+    dynamic type;
+    if (tagId != null) {
+      List arr = tagId.split('-');
+      id = arr[0];
+      type = arr[1];
+    } else {
+      id = null;
+    }
+    try {
+      var url = await getListUrl(sortId, id, type, page);
+      var res = await HttpCore.getInstance().get(url, getResponse: true);
+      if (res.data is String) {
+        res = jsonDecode(res.data);
+      } else {
+        res = res.data;
+      }
+      if (id == null || type == '10000') {
+        return {
+          'list': filterList(res['data']['data']),
+          'total': res['data']['total'],
+          'page': res['data']['pn'],
+          'limit': res['data']['rn'],
+          'source': 'kw',
+        };
+      }
+
+      return {
+        'list': filterList2(res),
+        'total': 1000,
+        'page': page,
+        'limit': 1000,
+        'source': 'kw',
+      };
+    } catch (e, s) {
+      Logger.error('kw getList  $e  $s');
+    }
+  }
+
+  static getListUrl([sortId, id, type, page]) {
+    if (id == null) {
+      return 'http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&&pn=${page}&rn=${limit_list}&order=${sortId}';
+    }
+    switch (type) {
+      case '10000':
+        return 'http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&id=${id}&rn=${limit_list}';
+      case '43':
+        return 'http://mobileinterfaces.kuwo.cn/er.s?type=get_pc_qz_data&f=web&id=${id}&prod=pc';
+    }
+  }
+
+  static filterList(List rawData) {
+    List list = [];
+    for (var item in rawData) {
+      list.add({
+        'play_count': AppUtil.formatPlayCount(int.parse(item['listencnt'] ?? '0')),
+        'id': 'digest-${item['digest']}__${item['id']}',
+        'author': item['uname'],
+        'name': item['name'],
+        'total': item['total'],
+        'img': item['img'],
+        'grade': double.parse(item['favorcnt']) / 10,
+        'desc': item['desc'],
+        'source': 'kw',
+      });
+    }
+    return list;
+  }
+
+  static filterList2(rawData) {
+    List list = [];
+    for (var data in rawData) {
+      if (data['label'] == null) continue;
+      for (var item in data['list']) {
+        list.add({
+          'play_count': AppUtil.formatPlayCount(item['listencnt'] ?? 0),
+          'id': 'digest-${item['digest']}__${item['id']}',
+          'author': item['uname'],
+          'name': item['name'],
+          'total': item['total'],
+          'img': item['img'],
+          'grade': (double.parse(item['favorcnt'] ?? '1.0')) / 10,
+          'desc': item['desc'],
+          'source': 'kw',
+        });
+      }
+    }
+    return list;
+  }
 }

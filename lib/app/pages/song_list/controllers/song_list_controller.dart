@@ -60,6 +60,7 @@ class SongListController extends GetxController {
   }
 
   Future<void> changePlatform(String name) async {
+    Logger.debug('changePlatform  $name');
     songList.value = [];
     currentPlatform.value = name;
     sortList.value = AppConst.sortListMap[name]!;
@@ -93,35 +94,38 @@ class SongListController extends GetxController {
     }
     // print('res   $res' );
     tagList.value = res;
+    openTag(res['hotTags'][0]);
   }
 
   /// 选择某个标签
   Future<void> openTag(item) async {
     Logger.debug('openTag  ==== $item');
-    int sortId = 0;
+    String sortId = sortList.where((item) => item.isSelect).first.id;
     String tagId = item['id'].toString();
-    page = 0;
+    page = 1;
     var res;
     switch (currentPlatform.value) {
       case AppConst.nameWY:
         res = await WYSongList.getList();//todo
         break;
       case AppConst.nameMG:
-        res = await MGSongList.getList();
+        res = await MGSongList.getList(sortId.toString(), tagId, page);
         break;
       case AppConst.nameKW:
-        res = await KWSongList.getList();
+        res = await KWSongList.getList(sortId.toString(), tagId, page);
         break;
       case AppConst.nameKG:
         res = await KGSongList.getList(sortId.toString(), tagId, page);
         break;
       case AppConst.nameTX:
-        res = await TXSongList.getList();
+        res = await TXSongList.getList(sortId.toString(), tagId, page);
         break;
     }
-    print('=======$res');
+    print('openTag  =======$res');
 
-    songList.value = res;
+    if(res != null) {
+      songList.value = res['list'];
+    }
     currentTag.value = item;
   }
 }

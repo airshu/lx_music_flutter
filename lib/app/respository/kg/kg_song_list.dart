@@ -65,10 +65,9 @@ class KGSongList {
   }
 
   static Future getMusicInfos(list) async {
-    return await filterData2(await Future.wait(createTask(deDuplication(list).map((item) =>
-    ({
-      'hash': item['hash'],
-    })))).then((value) {
+    return await filterData2(await Future.wait(createTask(deDuplication(list).map((item) => ({
+          'hash': item['hash'],
+        })))).then((value) {
       return value.expand((element) => element).toList();
     }));
   }
@@ -184,18 +183,18 @@ class KGSongList {
   static List filterTagInfo(Map rawData) {
     final result = [];
 
-    for(MapEntry entry in rawData.entries) {
-    // for (final name in rawData) {
+    for (MapEntry entry in rawData.entries) {
+      // for (final name in rawData) {
       String name = entry.key;
       result.add({
         'name': name,
         'list': rawData[name]['data'].map((tag) => ({
-          'parent_id': tag['parent_id'],
-          'parent_name': tag['pname'],
-          'id': tag['id'],
-          'name': tag['name'],
-          'source': 'kg',
-        })),
+              'parent_id': tag['parent_id'],
+              'parent_name': tag['pname'],
+              'id': tag['id'],
+              'name': tag['name'],
+              'source': 'kg',
+            })),
       });
     }
     return result;
@@ -206,9 +205,9 @@ class KGSongList {
     if (rawData['status'] != 1) {
       return result;
     }
-    for(MapEntry entry in (rawData['data'] as Map).entries) {
+    for (MapEntry entry in (rawData['data'] as Map).entries) {
       String key = entry.key;
-    // for (var key in rawData['data']) {
+      // for (var key in rawData['data']) {
       var tag = rawData['data'][key];
       result.add({
         'id': tag['special_id'],
@@ -219,17 +218,42 @@ class KGSongList {
     return result;
   }
 
-  static Future getList(String sortId, String tagId, int page) async {
-    return await getSongList(sortId, tagId, page);
+  static Map currentTagInfo = {
+    'id': null,
+    'info': null,
+  };
+
+  static Future getList([String? sortId, String? tagId, int page = 0]) async {
+    var tasks = await getSongList(sortId, tagId, page);
+    var info;
+    if (currentTagInfo['id'] == tagId) {
+      info = currentTagInfo['info'];
+    } else {
+      info = await getListInfo(tagId!);
+      currentTagInfo['id'] = tagId;
+      currentTagInfo['info'] = info;
+    }
+    if (tagId != null && page == 1 && sortId == sortList[0].id) {
+      var recommendList = await getSongListRecommend();
+      tasks.addAll(recommendList);
+    }
+
+    return {
+      'list': tasks,
+      ...info,
+    };
   }
 
-  static Future getSongList(String sortId, String tagId, int page) async {
+
+
+
+  static Future getSongList([String? sortId, String? tagId, int page = 0]) async {
     String url = getSonglistUrl(sortId, tagId, page);
     var res = await HttpCore.getInstance().get(url);
     return filterList(res['special_db']);
   }
 
-  static String getSonglistUrl(String sortId, String tagId, int page) {
+  static String getSonglistUrl([String? sortId, String? tagId, int page = 0]) {
     return 'http://www2.kugou.kugou.com/yueku/v9/special/getSpecial?is_ajax=1&cdn=cdn&t=${sortId}&c=${tagId}&p=${page}';
   }
 
@@ -247,5 +271,40 @@ class KGSongList {
         'time': AppUtil.dateFormat(item['publish_time'] ?? item['publishtime'], 'Y-M-D'),
       };
     }).toList();
+  }
+
+  static Future getListInfo(String tagId) async {
+    String url = getInfoUrl(tagId);
+    var res = await HttpCore.getInstance().get(url);
+    if (res['status'] == 1) {
+      return {
+        'limit': res['data']['params']['pagesize'],
+        'page': res['data']['params']['p'],
+        'total': res['data']['params']['total'],
+        'source': 'kg',
+      };
+    }
+  }
+
+  static Future getSongListRecommend() async {
+    String url = 'http://everydayrec.service.kugou.com/guess_special_recommend';
+    var res = await HttpCore.getInstance().post(
+      url,
+      headers: {
+        'User-Agent': 'KuGou2012-8275-web_browser_event_handler',
+      },
+      data: {
+        'appid': 1001,
+        'clienttime': 1566798337219,
+        'clientver': 8275,
+        'key': 'f1f93580115bb106680d2375f8032d96',
+        'mid': '21511157a05844bd085308bc76ef3343',
+        'platform': 'pc',
+        'userid': '262643156',
+        'return_min': 6,
+        'return_max': 15,
+      },
+    );
+    return filterList(res['data']['special_list']);
   }
 }
