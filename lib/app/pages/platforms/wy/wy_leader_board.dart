@@ -1,4 +1,4 @@
-import 'package:lx_music_flutter/app/respository/wy/crypto_utils.dart';
+import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 

@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:lx_music_flutter/app/respository/song_repository.dart';
+import 'package:lx_music_flutter/app/repository/song_repository.dart';
 
 part 'music_item.g.dart';
 

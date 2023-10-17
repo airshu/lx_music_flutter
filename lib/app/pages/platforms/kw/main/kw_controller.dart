@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
-import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 

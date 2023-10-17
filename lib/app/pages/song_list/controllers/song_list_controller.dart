@@ -1,11 +1,13 @@
+import 'dart:ffi';
+
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
-import 'package:lx_music_flutter/app/respository/kg/kg_song_list.dart';
-import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
-import 'package:lx_music_flutter/app/respository/mg/mg_song_list.dart';
-import 'package:lx_music_flutter/app/respository/tx/tx_song_list.dart';
-import 'package:lx_music_flutter/app/respository/wy/wy_song_list.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_song_list.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/app/repository/mg/mg_song_list.dart';
+import 'package:lx_music_flutter/app/repository/tx/tx_song_list.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
@@ -99,10 +101,9 @@ class SongListController extends GetxController {
 
   /// 选择某个标签
   Future<void> openTag(item) async {
-    Logger.debug('openTag  ==== $item');
+    Logger.debug('openTag  ===item=$item  page=$page');
     String sortId = sortList.where((item) => item.isSelect).first.id;
     String tagId = item['id'].toString();
-    page = 1;
     var res;
     switch (currentPlatform.value) {
       case AppConst.nameWY:
@@ -121,11 +122,21 @@ class SongListController extends GetxController {
         res = await TXSongList.getList(sortId.toString(), tagId, page);
         break;
     }
-    print('openTag  =======$res');
+    Logger.debug('openTag  =======$res');
 
     if(res != null) {
       songList.value = res['list'];
     }
     currentTag.value = item;
   }
+
+  Future<void> onRefresh() async {
+    await openTag(currentTag.value);
+  }
+
+  Future onLoad() async {
+    await openTag(currentTag.value);
+  }
+  
+  
 }

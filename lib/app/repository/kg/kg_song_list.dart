@@ -307,4 +307,8 @@ class KGSongList {
     );
     return filterList(res['data']['special_list']);
   }
+
+  static Future getListDetail(String id, int page) async {
+
+  }
 }

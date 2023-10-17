@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 

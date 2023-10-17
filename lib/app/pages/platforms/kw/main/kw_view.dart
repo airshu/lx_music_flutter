@@ -5,7 +5,7 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/pages/platforms/kw/song_list/kw_list_view.dart';
-import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 

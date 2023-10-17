@@ -189,4 +189,10 @@ class TXSongList {
       'source': 'tx',
     };
   }
+
+  static Future getListDetail(String id, int page) async {
+
+  }
+
+
 }

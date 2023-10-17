@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
-import 'package:lx_music_flutter/app/respository/wy/crypto_utils.dart';
+import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';

@@ -1,4 +1,4 @@
-import 'package:lx_music_flutter/app/respository/wy/crypto_utils.dart';
+import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
@@ -35,5 +35,9 @@ class WYSongList {
   }
 
   static getList() {}
+
+  static Future getListDetail(String id, int page) async {
+
+  }
 
 }

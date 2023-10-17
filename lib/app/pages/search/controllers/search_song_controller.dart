@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:lx_music_flutter/app/respository/song_repository.dart';
+import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 

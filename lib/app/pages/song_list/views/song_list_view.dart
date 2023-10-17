@@ -4,12 +4,11 @@ import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
-import 'package:lx_music_flutter/app/pages/search/views/search_view.dart';
 import 'package:lx_music_flutter/app/pages/song_list/controllers/song_list_controller.dart';
-import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/app/pages/song_list/views/song_list_detail_view.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
-import 'package:lx_music_flutter/services/music_player_service.dart';
-import 'package:lx_music_flutter/utils/overlay_dragger.dart';
+import 'package:lx_music_flutter/utils/log/logger.dart';
 
 /// 歌单主页
 class SongListView extends BaseStatefulWidget {
@@ -39,7 +38,7 @@ class _SongListState extends State<SongListView> {
   @override
   Widget build(BuildContext context) {
     return Navigator(
-      key: Get.nestedKey(AppConst.navigatorKeyKW),
+      key: Get.nestedKey(AppConst.navigatorKeySongList),
       onGenerateRoute: (settings) {
         print('====>>>>$settings');
         return PageRouteBuilder(
@@ -52,21 +51,6 @@ class _SongListState extends State<SongListView> {
   }
 
   Widget buildBody() {
-    Widget buildItem(int index) {
-      Board board = KWLeaderBoard.boardList.elementAt(index);
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          songListController.openBoard(board);
-        },
-        child: Container(
-          height: 40,
-          alignment: Alignment.centerLeft,
-          child: Text(board.name),
-        ),
-      );
-    }
-
     return Scaffold(
       drawer: buildDrawer(),
       body: Column(
@@ -96,11 +80,41 @@ class _SongListState extends State<SongListView> {
           Expanded(
             flex: 3,
             child: Obx(
-              () => ListView.builder(
-                itemBuilder: (context, index) {
-                  return buildSongItem(index);
+              () => EasyRefresh(
+                controller: easyRefreshController,
+                header: const ClassicHeader(),
+                footer: const ClassicFooter(),
+                onRefresh: () async {
+                  songListController.page = 1;
+                  await songListController.onRefresh();
+
+                  easyRefreshController.finishRefresh();
+                  easyRefreshController.resetFooter();
                 },
-                itemCount: songListController.songList.length,
+                onLoad: () async {
+                  songListController.page++;
+                  await songListController.onLoad();
+
+                  easyRefreshController.finishLoad(songListController.songList.length % songListController.pageSize >= songListController.pageSize
+                      ? IndicatorResult.noMore
+                      : IndicatorResult.success);
+                },
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemBuilder: (context, index) {
+                    return buildSongItem(index);
+                  },
+                  itemCount: songListController.songList.length,
+                  // child: ListView.builder(
+                  //   itemBuilder: (context, index) {
+                  //     return buildSongItem(index);
+                  //   },
+                  //   itemCount: songListController.songList.length,
+                  // ),
+                ),
               ),
             ),
           ),
@@ -115,28 +129,37 @@ class _SongListState extends State<SongListView> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () async {
-        String songmid = item['songmid'];
-        for (var t in item['types']) {
-          var result = await KWSongList.getMusicUrlDirect(songmid, t['type']);
-          if (result['url'] != null && result['url'].isNotEmpty) {
-            print('$songmid  ${t['type']}=======>>>>>>result=$result');
-            item.url = result['url'];
-          }
-          return;
-        }
+
+        Logger.debug('====$item');
+        Get.to(SongListDetailView(songListItem: item), id: AppConst.navigatorKeySongList);
+
+
+        // String songmid = item['songmid'];
+        // for (var t in item['types']) {
+        //   var result = await KWSongList.getMusicUrlDirect(songmid, t['type']);
+        //   if (result['url'] != null && result['url'].isNotEmpty) {
+        //     print('$songmid  ${t['type']}=======>>>>>>result=$result');
+        //     item.url = result['url'];
+        //   }
+        //   return;
+        // }
       },
       child: Container(
-        height: 26,
-        child: Row(
+        child: Column(
           children: [
-            Expanded(
-                child: Text(
-              '${item['name']}',
-              overflow: TextOverflow.ellipsis,
-            )),
+            Image(
+              image: NetworkImage(item['img']),
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+            ),
             // Text('${item['singer']}'),
             // Text('${item['albumName']}'),
-            Text('${item['interval']}'),
+            // Text('${item['interval']}'),
+            Text(
+              '${item['name']}',
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),

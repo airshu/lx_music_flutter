@@ -1,8 +1,8 @@
-import 'package:lx_music_flutter/app/respository/kg/kg_song_list.dart';
-import 'package:lx_music_flutter/app/respository/kw/kw_song_list.dart';
-import 'package:lx_music_flutter/app/respository/mg/mg_song_list.dart';
-import 'package:lx_music_flutter/app/respository/tx/tx_song_list.dart';
-import 'package:lx_music_flutter/app/respository/wy/wy_song_list.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_song_list.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/app/repository/mg/mg_song_list.dart';
+import 'package:lx_music_flutter/app/repository/tx/tx_song_list.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_song_list.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 
 /// 全局常量
@@ -14,6 +14,7 @@ class AppConst {
   static const int navigatorKeySetting = 10000;
 
   static const int navigatorKeyKW = 10001;
+  static const int navigatorKeySongList = 10002;
 
   static const String bHh = '624868746c';
 
@@ -43,6 +44,12 @@ class AppConst {
     AppConst.nameTX: TXSongList.sortList,
     AppConst.nameWY: WYSongList.sortList,
   };
+
+  static const String sourceKW = 'kw';
+  static const String sourceKG = 'kg';
+  static const String sourceWY = 'wy';
+  static const String sourceMG = 'mg';
+  static const String sourceTX = 'tx';
 }
 
 /// 所有url
