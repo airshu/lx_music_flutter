@@ -97,7 +97,7 @@ class TXSongList {
           'param': {
             'titleid': id,
             'caller': '0',
-            'category_id': id,
+            'category_id': int.parse(id),
             'size': limit_list,
             'page': page - 1,
             'use_page': 1,
@@ -147,8 +147,10 @@ class TXSongList {
 
   static Map filterList2(content, int page) {
     List list = content['v_item'].map((basic) {
+      print(basic);
+      basic = basic['basic'];
       return {
-        'play_count': AppUtil.formatPlayCount(basic['play_cnt'] ?? '0'),
+        'play_count': AppUtil.formatPlayCount(basic['play_cnt'] ?? 0),
         'id': basic['id'],
         'author': basic['creator']['nick'],
         'name': basic['title'],
