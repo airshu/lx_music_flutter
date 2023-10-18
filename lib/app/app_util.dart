@@ -3,6 +3,9 @@ import 'dart:math' as math;
 class AppUtil {
 
   static String sizeFormate(num size) {
+    if(size == 0) {
+      return '0B';
+    }
     List units = ['B', 'KB', 'MB', 'GB', 'TB'];
     var number = (math.log(size) / math.log(1024)).floor();
     return '${(size / math.pow(1024, number)).toStringAsFixed(2)}${units[number]}';

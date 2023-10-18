@@ -417,7 +417,12 @@ class BaseHttp {
 
   /// 对请求参数预处理
   void handleRequestData(String url, Map<String, dynamic> headers, Map options, String method) {
-    if(method == POST) {
+
+    if(!headers.containsKey('Accept')) {
+      headers['Accept'] ='application/json';
+    }
+
+    if(method == POST && !headers.containsKey('Content-Type')) {
     Logger.debug('handleRequestData:  url=$url, headers=$headers, options=$options');
       if (options['form'] != null) {
         headers['Content-Type'] = Headers.formUrlEncodedContentType;

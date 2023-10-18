@@ -11,17 +11,17 @@ class SortItem {
 /// 歌单详情
 class DetailInfo {
   String name;
-  String desc;
-  String playCount;
+  String? desc;
+  String? playCount;
   String author;
   String? imgUrl;
 
   DetailInfo({
     required this.name,
-    required this.desc,
-    required this.playCount,
+    this.desc = '',
+    this.playCount = '',
     required this.author,
-    this.imgUrl,
+    this.imgUrl = '',
   });
 
   factory DetailInfo.empty() {

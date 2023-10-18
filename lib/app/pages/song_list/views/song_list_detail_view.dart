@@ -55,27 +55,28 @@ class _SongListDetailViewState extends State<SongListDetailView> {
 
   Widget buildTopWidget() {
     Widget buildImg(String? url) {
-      if (url != null)
+      if (url != null && url.isNotEmpty) {
         return Image(
           image: NetworkImage(url),
           width: 70,
           height: 70,
         );
-      else
-        return Container(
+      } else {
+        return const SizedBox(
           width: 40,
           height: 40,
         );
+      }
     }
 
     Widget buildPlayCount(String playCount) {
       return Container(
         color: Colors.black.withOpacity(0.5),
+        alignment: Alignment.centerLeft,
         child: Text(
           playCount,
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
-        alignment: Alignment.centerLeft,
       );
     }
 
@@ -93,7 +94,7 @@ class _SongListDetailViewState extends State<SongListDetailView> {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    child: buildPlayCount(detailInfo.playCount),
+                    child: buildPlayCount(detailInfo.playCount ?? ''),
                   ),
                 ],
               ),
@@ -113,7 +114,7 @@ class _SongListDetailViewState extends State<SongListDetailView> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      detailInfo.desc,
+                      detailInfo.desc ?? '',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -241,7 +242,9 @@ class _SongListDetailViewState extends State<SongListDetailView> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         ElevatedButton(onPressed: () {}, child: const Text('收藏歌单')),
-        ElevatedButton(onPressed: () {}, child: const Text('播放全部')),
+        ElevatedButton(onPressed: () {
+          handlePlayAll();
+        }, child: const Text('播放全部')),
         ElevatedButton(
             onPressed: () {
               Get.back(id: AppConst.navigatorKeySongList);
@@ -249,6 +252,21 @@ class _SongListDetailViewState extends State<SongListDetailView> {
             child: const Text('返回')),
       ],
     );
+  }
+
+
+  void handlePlayAll() {
+    print('2323223');
+    String id = widget.songListItem['id'];
+    String source = widget.songListItem['source'];
+    List list = controller.detailInfo.value['list'];
+
+    String listId = getListId(id, source);
+
+  }
+
+  String getListId(String id, String source) {
+    return '${source}__${id}';
   }
 }
 

@@ -40,7 +40,7 @@ class SongListDetailController extends GetxController {
         break;
     }
 
-    Logger.debug('---------$res');
+    Logger.debug('getListDetail---------$res');
     detailInfo.value = res;
   }
 }

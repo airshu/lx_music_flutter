@@ -116,7 +116,7 @@ class TXSongList {
           'id': 10000000,
           'sin': limit_list * (page - 1),
           'size': limit_list,
-          'order': 'sortId',
+          'order': sortId,
           'cur_page': page,
         },
         'module': 'playlist.PlayListPlazaServer',
@@ -140,7 +140,7 @@ class TXSongList {
         return filterList2(info['playlist']['data']['content'], page);
       }
       return filterList(info['playlist']['data'], page);
-    } catch(e, s) {
+    } catch (e, s) {
       Logger.error('$e  $s');
     }
   }
@@ -151,7 +151,7 @@ class TXSongList {
       basic = basic['basic'];
       return {
         'play_count': AppUtil.formatPlayCount(basic['play_cnt'] ?? 0),
-        'id': basic['id'],
+        'id': basic['tid'].toString(),
         'author': basic['creator']['nick'],
         'name': basic['title'],
         'img': basic['cover']?['medium_url'] ?? basic['cover']?['default_url'],
@@ -193,8 +193,105 @@ class TXSongList {
   }
 
   static Future getListDetail(String id, int page) async {
+    id = await getListId(id);
 
+    String url = getListDetailUrl(id);
+    var headers = {
+      'Origin': 'https://y.qq.com',
+      'Referer': 'https://y.qq.com/n/yqq/playsquare/${id}.html',
+    };
+
+    var listDetail = await HttpCore.getInstance().get(url, headers: headers);
+    var cdlist = listDetail['cdlist'][0];
+    return {
+      'list': filterListDetail(cdlist['songlist']),
+      'page': 1,
+      'limit': cdlist['songlist'].length + 1,
+      'total': cdlist['songlist'].length,
+      'source': 'tx',
+      'info': DetailInfo(
+        name: cdlist['dissname'],
+        imgUrl: cdlist['logo'],
+        desc: AppUtil.decodeName(cdlist['desc']).replaceAll('<br>', '\n'),
+        author: cdlist['nickname'],
+        playCount: AppUtil.formatPlayCount(cdlist['visitnum']),
+      ),
+    };
   }
 
+  static getListDetailUrl(id) {
+    return 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&new_format=1&disstid=${id}&loginUin=0&hostUin=0&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=0';
+  }
 
+  static Future getListId(id) async {
+    if(RegExp('[?&:/]').hasMatch(id)) {
+      if(listDetailLinkRegExp.hasMatch(id)) {
+        id = handleParseId(id);
+      }
+      Iterable<RegExpMatch> result = listDetailLinkRegExp.allMatches(id);
+      if(result.isEmpty) {
+        result = listDetailLink2RegExp.allMatches(id);
+      }
+      id = result.elementAt(0);
+    }
+    return id;
+  }
+
+  static Future handleParseId(link) async {
+    var res = await HttpCore.getInstance().get(link);
+    return res['url'];
+  }
+
+  static List<Map<String, dynamic>> filterListDetail(List<dynamic> rawList) {
+    return rawList.map((item) {
+      List<Map<String, dynamic>> types = [];
+      Map<String, dynamic> _types = {};
+      if (item['file']['size_128mp3'] != null) {
+        var size = AppUtil.sizeFormate(item['file']['size_128mp3']);
+        types.add({'type': '128k', 'size': size});
+        _types['128k'] = {'size': size};
+      }
+
+      if (item['file']['size_320mp3'] != null) {
+        var size = AppUtil.sizeFormate(item['file']['size_320mp3']);
+        types.add({'type': '320k', 'size': size});
+        _types['320k'] = {'size': size};
+      }
+
+      if (item['file']['size_flac'] != null) {
+        var size = AppUtil.sizeFormate(item['file']['size_flac']);
+        types.add({'type': 'flac', 'size': size});
+        _types['flac'] = {'size': size};
+      }
+
+      if (item['file']['size_hires'] != null) {
+        var size = AppUtil.sizeFormate(item['file']['size_hires']);
+        types.add({'type': 'flac24bit', 'size': size});
+        _types['flac24bit'] = {'size': size};
+      }
+
+      return {
+        'singer': AppUtil.formatSingerName(singers: item['singer']),
+        'name': item['title'],
+        'albumName': item['album']['name'],
+        'albumId': item['album']['mid'],
+        'songmid': item['mid'],
+        'source': 'tx',
+        'interval': AppUtil.formatPlayTime(item['interval']),
+        'songId': item['id'],
+        'albumMid': item['album']['mid'],
+        'strMediaMid': item['file']['media_mid'],
+        'img': (item['album']['name'] == '' || item['album']['name'] == '空')
+            ? (item['singer'] is Map && item['singer'].length > 0)
+                ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item['singer'][0]['mid']}.jpg'
+                : ''
+            : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item['album']['mid']}.jpg',
+        'lrc': null,
+        'otherSource': null,
+        'types': types,
+        '_types': _types,
+        'typeUrl': {},
+      };
+    }).toList();
+  }
 }

@@ -83,13 +83,13 @@ class KWSongList {
       'limit': result['rn'],
       'total': result['total'],
       'source': 'kw',
-      'info': {
-        'name': result['title'],
-        'img': result['pic'],
-        'desc': result['info'],
-        'author': result['uname'],
-        'play_count': AppUtil.formatPlayCount(result['playnum']),
-      },
+      'info': DetailInfo(
+        name: result['title'],
+        imgUrl: result['pic'],
+        desc: result['info'],
+        author: result['uname'],
+        playCount: AppUtil.formatPlayCount(result['playnum']),
+      ),
     };
   }
 
@@ -175,13 +175,13 @@ class KWSongList {
       'limit': limit_song,
       'total': int.parse(body['songnum']),
       'source': 'kw',
-      'info': {
-        'name': body['name'],
-        'img': body['img'] ?? body['hts_img'],
-        'desc': decodeName(body['info']),
-        'author': decodeName(body['artist']),
-        // 'play_count': formatPlayCount(body['playnum']),
-      },
+      'info': DetailInfo(
+        name: body['name'],
+        imgUrl: body['img'] ?? body['hts_img'],
+        desc: decodeName(body['info']),
+        author: decodeName(body['artist']),
+        playCount: AppUtil.formatPlayCount(body['playnum'] ?? '0'),
+      ),
     };
   }
 
@@ -196,13 +196,13 @@ class KWSongList {
       'limit': result['rn'],
       'total': result['total'],
       'source': 'kw',
-      'info': {
-        'name': result['title'],
-        'img': result['pic'],
-        'desc': result['info'],
-        'author': result['uname'],
-        'play_count': AppUtil.formatPlayCount(result['playnum']),
-      },
+      'info': DetailInfo(
+        name: result['title'],
+        imgUrl: result['pic'],
+        desc: result['info'],
+        author: result['uname'],
+        playCount: AppUtil.formatPlayCount(result['playnum']),
+      ),
     };
   }
 
