@@ -72,6 +72,15 @@ class MusicPlayer {
 
   }
 
+
+  Future<void> addSongInfo(String url, songinfo) async {
+
+    await playList.insert(0, AudioSource.uri(Uri.parse(url), tag: songinfo));
+    await player.seek(Duration.zero, index: 0);
+    player.play();
+    Logger.debug('addSongInfo  $songinfo  ${player.currentIndex}  ${player.sequenceState?.currentSource}');
+  }
+
   /// 添加一首歌曲到播放列表
   Future<void> add(MusicItem item) async {
     String? url = await item.getUrl();

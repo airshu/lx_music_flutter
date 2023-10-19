@@ -40,7 +40,6 @@ class _SettingViewState extends State<SettingView> {
 
   Widget buildBody() {
     return Scaffold(
-      appBar: AppBar(),
       body: Center(
         child: Column(
           children: [
@@ -90,35 +89,38 @@ class _SettingViewState extends State<SettingView> {
   Widget buildSourceWidget() {
     return StatefulBuilder(
       builder: (context, setState) {
+        Widget buildRadio(String label, String source) {
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              setState(() {
+                Settings().musicSource = source;
+              });
+            },
+            child: Container(
+              child: Row(
+                children: [
+                  Radio(
+                    value: source,
+                    groupValue: Settings().musicSource,
+                    onChanged: (value) {
+                      setState(() {
+                        Settings().musicSource = source;
+                      });
+                    },
+                  ),
+                  Text(label),
+                ],
+              ),
+            ),
+          );
+        }
+
         return Column(
           children: [
-            Radio(
-              value: '测试接口',
-              groupValue: Settings().musicSource,
-              onChanged: (value) {
-                setState(() {
-                  Settings().musicSource = MusicSource.sourceTest;
-                });
-              },
-            ),
-            Radio(
-              value: '临时接口',
-              groupValue: Settings().musicSource,
-              onChanged: (value) {
-                setState(() {
-                  Settings().musicSource = MusicSource.sourceTemp;
-                });
-              },
-            ),
-            Radio(
-              value: '试听接口（这是最后的选择）',
-              groupValue: Settings().musicSource,
-              onChanged: (value) {
-                setState(() {
-                  Settings().musicSource = MusicSource.sourceDirect;
-                });
-              },
-            ),
+            buildRadio('测试接口', MusicSource.sourceTest),
+            buildRadio('临时接口', MusicSource.sourceTemp),
+            buildRadio('试听接口（这是最后的选择）', MusicSource.sourceDirect),
           ],
         );
       },

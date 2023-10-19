@@ -1,15 +1,10 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
-import 'package:lx_music_flutter/app/app_const.dart';
+import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/utils/http/interceptors/params_interceptor.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
 import 'base_http.dart';
-
-import 'package:convert/convert.dart' as convert;
 
 /// http请求封装类
 class HttpCore extends BaseHttp {

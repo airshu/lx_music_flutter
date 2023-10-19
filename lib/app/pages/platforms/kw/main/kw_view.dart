@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
-import 'package:lx_music_flutter/app/pages/platforms/kw/kw_leader_board.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/pages/platforms/kw/song_list/kw_list_view.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
@@ -52,21 +52,6 @@ class _KWViewState extends State<KWView> {
   }
 
   Widget buildBody() {
-    Widget buildItem(int index) {
-      Board board = KWLeaderBoard.boardList.elementAt(index);
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          kwController.openBoard(board);
-        },
-        child: Container(
-          height: 40,
-          alignment: Alignment.centerLeft,
-          child: Text(board.name),
-        ),
-      );
-    }
-
     Widget buildRightItem(int index) {
       if (kwController.songList.length <= index) return Container();
       final item = kwController.songList.elementAt(index);

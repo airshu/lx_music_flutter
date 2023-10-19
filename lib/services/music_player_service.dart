@@ -1,24 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/pages/player/views/music_player_component.dart';
+import 'package:lx_music_flutter/app/pages/setting/settings.dart';
+import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/app/sql/music_sql_manager.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/download_manager/download_manager.dart';
 import 'package:lx_music_flutter/utils/overlay_dragger.dart';
+import 'package:lx_music_flutter/utils/player/music_player.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
 
+/// 音乐播放服务管理
 class MusicPlayerService extends GetxService {
   static MusicPlayerService get instance => Get.find();
 
   MusicPlayerComponent musicPlayerComponent = const MusicPlayerComponent();
 
+
+  /// 喜爱的播放列表
+  List loveMusicList = [];
+
+  /// 临时播放列表
+  List tempMusicList = [];
+
   @override
   void onInit() {
     super.onInit();
+
+    //todo 读取数据库获取播放列表数据
   }
 
 
-  Future<void> play(MusicItem item) async {
+  /// 播放音乐
+  Future<void> play(String source, dynamic songinfo) async {
+    List types = songinfo['types'];
+    for(var item in types) {
+      String type = item['type'];
+
+      Map urlInfo = await SongRepository.getMusicUrl(source, MusicSource.sourceTest, songinfo, type);
+      if(urlInfo['url'] == null || urlInfo['url'] == '') {
+        urlInfo = await SongRepository.getMusicUrl(source, MusicSource.sourceTemp, songinfo, type);
+      }
+      if(urlInfo['url'] == null || urlInfo['url'] == '') {
+        urlInfo = await SongRepository.getMusicUrl(source, MusicSource.sourceDirect, songinfo, type);
+      }
+      if(urlInfo['url'] != null) {
+        songinfo['typeUrl'][type] = urlInfo['url'];
+        MusicPlayer().addSongInfo(urlInfo['url'], songinfo);
+        return;
+      }
+    }
+  }
+
+  /// 播放音乐列表
+  void playList(dynamic list) {
 
   }
 

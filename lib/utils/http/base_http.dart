@@ -2,14 +2,15 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:convert/convert.dart' as convert;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
+import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/utils/http/entity.dart';
 import 'package:lx_music_flutter/utils/http/http_exception.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:convert/convert.dart' as convert;
 
 class HttpCode {
   static const int SUCCESS = 2000; // 有点奇怪，后台接口返回的正常code=2000

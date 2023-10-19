@@ -571,29 +571,6 @@ class KWSongList {
     return {'type': type, 'url': result['data']['url']};
   }
 
-  static Future getMusicUrlTemp(String songmid, String type) async {
-    String url = 'http://tm.tempmusics.tk/url/kw/$songmid/$type';
-    Map<String, dynamic> headers = {
-      'User-Agent': 'lx-music request',
-      AppConst.bHh: AppConst.bHh,
-    };
-    final result = await HttpCore.getInstance().get(url, headers: headers);
-    return result != null && result['code'] == 0 ? {'type': type, 'url': result['data']} : Future.error(Exception(result['msg']));
-  }
-
-  static Future getMusicUrlTest(String songmid, String type) async {
-    Map<String, dynamic> headers = {
-      'User-Agent': 'lx-music request',
-      AppConst.bHh: AppConst.bHh,
-      'family': 4,
-    };
-    String url = 'http://ts.tempmusics.tk/url/kw/$songmid/$type';
-    // headers = await getHeader(url, headers);
-    final result = await HttpCore.getInstance()
-        .get(url, headers: headers, options: Options(sendTimeout: const Duration(seconds: 15), method: 'get'));
-    return result['code'] == 0 ? {'type': type, 'url': result['data']} : Future.error(Exception(result.fail));
-  }
-
   /// 获取歌曲封面
   static Future getPic(String songmid) async {
     String url = 'http://artistpicserver.kuwo.cn/pic.web?corp=kuwo&type=rid_pic&pictype=500&size=500&rid=$songmid';

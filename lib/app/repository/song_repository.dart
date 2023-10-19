@@ -1,11 +1,18 @@
 import 'dart:convert';
 
 import 'package:lx_music_flutter/app/app_const.dart';
+import 'package:lx_music_flutter/app/pages/setting/settings.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_api_temp.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_api_test.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/mg/mg_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/tx/tx_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_api_direct.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/services/app_service.dart';
 import 'package:lx_music_flutter/utils/encrypt_util.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
-import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:lx_music_flutter/utils/md5_util.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
 
@@ -72,4 +79,74 @@ class SongRepository {
       rethrow;
     }
   }
+
+
+
+  /// 获取歌曲播放地址
+  /// [source] 平台
+  /// [songinfo] 歌曲信息
+  /// [type] 音质
+  static Future getMusicUrl(String source, String musicSource, dynamic songinfo, type) async {
+
+    switch(source) {
+      case AppConst.sourceKG:
+        if(musicSource == MusicSource.sourceDirect) {
+          return KGApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTemp) {
+          return KGApiTemp.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTest) {
+          return KGApiTest.getMusicUrl(songinfo, type);
+        }
+        break;
+      case AppConst.sourceKW:
+        if(musicSource == MusicSource.sourceDirect) {
+          return KWApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTemp) {
+          return KWApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTest) {
+          return KWApiDirect.getMusicUrl(songinfo, type);
+        }
+        break;
+      case AppConst.sourceMG:
+        if(musicSource == MusicSource.sourceDirect) {
+          return MGApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTemp) {
+          return MGApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTest) {
+          return MGApiDirect.getMusicUrl(songinfo, type);
+        }
+        break;
+      case AppConst.sourceTX:
+        if(musicSource == MusicSource.sourceDirect) {
+          return TXApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTemp) {
+          return TXApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTest) {
+          return TXApiDirect.getMusicUrl(songinfo, type);
+        }
+        break;
+      case AppConst.sourceWY:
+        if(musicSource == MusicSource.sourceDirect) {
+          return WYApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTemp) {
+          return WYApiDirect.getMusicUrl(songinfo, type);
+        } else if(musicSource == MusicSource.sourceTest) {
+          return WYApiDirect.getMusicUrl(songinfo, type);
+        }
+        break;
+    }
+  }
+}
+
+/// 所有url
+class Urls {
+  static String getBaseUrl() {
+    return '';
+  }
+
+  /// 酷狗搜索
+  static const String kugouSearch = "http://mobilecdn.kugou.com/new/app/i/search.php?";
+
+  /// 获取真实播放地址
+  static const String kugouGetSongUrl = "http://trackercdn.kugou.com/i/?";
 }

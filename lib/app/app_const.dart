@@ -18,7 +18,7 @@ class AppConst {
 
   static const String bHh = '624868746c';
 
-  Map<String, dynamic> headers = {
+  static Map<String, dynamic> headers = {
     'User-Agent': 'lx-music request',
     AppConst.bHh: AppConst.bHh,
   };
@@ -52,15 +52,3 @@ class AppConst {
   static const String sourceTX = 'tx';
 }
 
-/// 所有url
-class Urls {
-  static String getBaseUrl() {
-    return '';
-  }
-
-  /// 酷狗搜索
-  static const String kugouSearch = "http://mobilecdn.kugou.com/new/app/i/search.php?";
-
-  /// 获取真实播放地址
-  static const String kugouGetSongUrl = "http://trackercdn.kugou.com/i/?";
-}

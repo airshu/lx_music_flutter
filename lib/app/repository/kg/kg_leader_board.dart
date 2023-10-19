@@ -95,9 +95,9 @@ class KGLeaderBoard {
   static Future getList(String bangid, int page) async {
     String url = getUrl(page, bangid, listDetailLimit);
     var result = await HttpCore.getInstance().get(url);
-    int total = int.parse(result['total']);
+    var total = result['data']['total'];
     int limit = 100;
-    List list = filterData(result['info']);
+    List list = filterData(result['data']['info']);
     return {
       'total': total,
       'list': list,

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/song_list/controllers/song_list_detail_controller.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
+import 'package:lx_music_flutter/services/music_player_service.dart';
 import 'package:lx_music_flutter/utils/dialog_util.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
@@ -198,6 +199,10 @@ class _SongListDetailViewState extends State<SongListDetailView> {
         'name': '播放',
         'onTap': () {
           Logger.debug('播放=====$item');
+          String id = widget.songListItem['id'];
+          String source = widget.songListItem['source'];
+
+          MusicPlayerService.instance.play(source, item);
         },
       },
       {
