@@ -38,6 +38,7 @@ class SongRepository {
     return result;
   }
 
+  /// 旧的酷狗搜索
   static Future<List<MusicItem>> searchKuGou(String keyword, int pageSize, int page) async {
     String url = '${Urls.kugouSearch}keyword=$keyword&cmd=300&pagesize=$pageSize&page=$page';
 
@@ -65,6 +66,7 @@ class SongRepository {
     }
   }
 
+  /// 酷狗搜索获取歌曲播放地址
   static Future<String?> getSongUrl(String hash) async {
     String key = MD5Util.generateMD5('${hash}kgcloud');
     String url = '${Urls.kugouGetSongUrl}pid=6&cmd=3&acceptMp3=1&hash=$hash&key=$key';
@@ -83,7 +85,8 @@ class SongRepository {
 
 
   /// 获取歌曲播放地址
-  /// [source] 平台
+  /// [source] 平台 @see [AppConst.sourceMG]
+  /// [musicSource] 音乐接口来源类型 @see [MusicSource]
   /// [songinfo] 歌曲信息
   /// [type] 音质
   static Future getMusicUrl(String source, String musicSource, dynamic songinfo, type) async {

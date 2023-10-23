@@ -1,6 +1,7 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
@@ -10,7 +11,10 @@ import 'package:lx_music_flutter/utils/toast_util.dart';
 import '../controllers/search_song_controller.dart';
 
 class SearchViewWidget extends BaseStatefulWidget {
-  const SearchViewWidget({super.key, required super.title,});
+  const SearchViewWidget({
+    super.key,
+    required super.title,
+  });
 
   @override
   State<SearchViewWidget> createState() => _SearchViewWidgetState();
@@ -32,10 +36,33 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
     super.initState();
   }
 
+  Widget buildMenuWidget() {
+    List<DropdownMenuItem> children = [];
+    for (var element in AppConst.platformNames) {
+      children.add(
+        DropdownMenuItem(
+          value: element,
+          child: Text(element),
+        ),
+      );
+    }
+    return DropdownButton(
+      elevation: 0,
+      padding: EdgeInsets.zero,
+      value: searchSongController.currentPlatform.value,
+      items: children,
+      onChanged: (value) {
+        searchSongController.changePlatform(value.toString());
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: SearchAppBar(
+        leadingWidth: 80,
+        leading: buildMenuWidget(),
         onSearch: (value) {
           searchSongController.songList.clear();
           searchSongController.search();
@@ -43,10 +70,10 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
         onChanged: (value) {
           searchSongController.keyword = value;
         },
-        onRightTap: () {
-          searchSongController.songList.clear();
-          searchSongController.search();
-        },
+        // onRightTap: () {
+        //   searchSongController.songList.clear();
+        //   searchSongController.search();
+        // },
       ),
       body: buildListWidget(),
     );
@@ -106,15 +133,21 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
         height: 80,
         child: Row(
           children: [
-            Expanded(child: Text(item.songName, maxLines: 2,)),
+            Expanded(
+                child: Text(
+              item.songName,
+              maxLines: 2,
+            )),
             IconButton(
                 onPressed: () async {
                   MusicPlayer().add(item);
                 },
                 icon: const Icon(Icons.play_arrow_outlined)),
-            IconButton(onPressed: () {
-              MusicPlayerService().download(item);
-            }, icon: const Icon(Icons.download_outlined)),
+            IconButton(
+                onPressed: () {
+                  MusicPlayerService().download(item);
+                },
+                icon: const Icon(Icons.download_outlined)),
           ],
         ),
       ),
@@ -132,6 +165,7 @@ class SearchAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.height = 40,
     this.value,
     this.leading,
+    this.leadingWidth,
     this.backgroundColor,
     this.suffix,
     this.actions = const [],
@@ -157,6 +191,8 @@ class SearchAppBar extends StatefulWidget implements PreferredSizeWidget {
 
   // 最前面的组件
   final Widget? leading;
+
+  final double? leadingWidth;
 
   // 背景色
   final Color? backgroundColor;
@@ -284,7 +320,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
       elevation: 0,
       // 标题与其他控件的间隔
       titleSpacing: 0,
-      leadingWidth: 40,
+      leadingWidth: widget.leadingWidth ?? 40,
       leading: widget.leading ??
           InkWell(
             child: const Icon(

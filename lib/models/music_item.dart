@@ -50,7 +50,7 @@ class MusicItem {
   String? url;
 
   Future<String?> getUrl() async {
-    // url ??= await SongRepository.getSongUrl(hash);
+    url = await SongRepository.getSongUrl(hash);
     return url;
   }
 }

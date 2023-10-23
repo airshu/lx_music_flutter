@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/app/pages/leader_board/views/leader_board_view.dart';
+import 'package:lx_music_flutter/app/pages/search/controllers/search_song_controller.dart';
 import 'package:lx_music_flutter/app/pages/search/views/search_view.dart';
 import 'package:lx_music_flutter/app/pages/song_list/views/song_list_view.dart';
 
@@ -47,11 +48,48 @@ class _HomeViewsState extends State<HomeViews> {
     return pages[index]!;
   }
 
+  List<Widget>? buildActions() {
+    return [
+      Obx(() {
+        if (controller.currentIndex.value == 0) {
+          return ElevatedButton(
+            child: Text(
+              '歌曲',
+              style: TextStyle(
+                  color: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeSong ? Colors.blue : null),
+            ),
+            onPressed: () {
+              Get.find<SearchSongController>().searchType.value = SearchSongController.searchTypeSong;
+            },
+          );
+        }
+        return Container();
+      }),
+      Obx(() {
+        if (controller.currentIndex.value == 0) {
+          return ElevatedButton(
+            child: Text(
+              '歌单',
+              style: TextStyle(
+                color: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeList ? Colors.blue : null,
+              ),
+            ),
+            onPressed: () {
+              Get.find<SearchSongController>().searchType.value = SearchSongController.searchTypeList;
+            },
+          );
+        }
+        return Container();
+      }),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Obx(() => Text(getPage(controller.currentIndex.value).title)),
+        actions: buildActions(),
       ),
       body: Obx(
         () => getPage(controller.currentIndex.value),
