@@ -5,10 +5,20 @@ import 'package:lx_music_flutter/app/pages/setting/settings.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_direct.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_temp.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_test.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_music_search.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_music_search.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/mg/mg_music_search.dart';
+import 'package:lx_music_flutter/app/repository/mg/mg_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/tx/tx_music_search.dart';
+import 'package:lx_music_flutter/app/repository/tx/tx_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_music_search.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_tip_search.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/services/app_service.dart';
 import 'package:lx_music_flutter/utils/encrypt_util.dart';
@@ -17,26 +27,9 @@ import 'package:lx_music_flutter/utils/md5_util.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
 
 class SongRepository {
-  static Map eapi(String url, object) {
-    String text = (object is String) ? json.encode(object) : object;
-    String message = 'nobody${url}use${text}md5forencrypt';
-    String digest = MD5Util.generateMD5(message);
-    String data = '${url}-36cd479b6b5-${text}-36cd479b6b5-${digest}';
 
-    return {
-      'params': EncryptUtil.aesDecrypt(EncryptUtil.encodeBase64(data), AppService.to.eapiKey, AppService.to.iv),
-      'encSecKey': EncryptUtil.encryptByPublicKeyText(AppService.to.publicKey, digest),
-    };
-  }
 
-  static Future eapiRequest(data) async {
-    String url = 'http://interface.music.163.com/eapi/batch';
-    var result = await HttpCore.getInstance().post(url, headers: {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-      'origin': 'https://music.163.com',
-    },data: eapi(url, data));
-    return result;
-  }
+
 
   /// 旧的酷狗搜索
   static Future<List<MusicItem>> searchKuGou(String keyword, int pageSize, int page) async {
@@ -83,60 +76,64 @@ class SongRepository {
   }
 
 
+  static Map tipSearchMap = {
+    AppConst.sourceKG: KGTipSearch.search,
+    AppConst.sourceKW: KWTipSearch.search,
+    AppConst.sourceMG: MGTipSearch.search,
+    AppConst.sourceTX: TXTipSearch.search,
+    AppConst.sourceWY: WYTipSearch.search,
+  };
+
+  /// 搜索
+  /// [keyword]
+  /// [source]
+  static Future tipSearch(String keyword, String source) async {
+    return await tipSearchMap[source](keyword);
+  }
+
+
+  static Map musicSearchMap = {
+    AppConst.sourceKG: KGMusicSearch.search,
+    AppConst.sourceKW: KWMusicSearch.search,
+    AppConst.sourceMG: MGMusicSearch.search,
+    AppConst.sourceTX: TXMusicSearch.search,
+    AppConst.sourceWY: WYMusicSearch.search,
+  };
+
+  ///
+  static Future getOtherSource(musicInfo, String source) async {
+    return await musicSearchMap[source](musicInfo);
+  }
+
+
+  static Map musicUrlMap = {
+    AppConst.sourceKG + MusicSource.sourceDirect: KGApiDirect.getMusicUrl,
+    AppConst.sourceKG + MusicSource.sourceTemp: KGApiTemp.getMusicUrl,
+    AppConst.sourceKG + MusicSource.sourceTest: KGApiTest.getMusicUrl,
+    AppConst.sourceKW + MusicSource.sourceDirect: KWApiDirect.getMusicUrl,
+    AppConst.sourceKW + MusicSource.sourceTemp: KWApiDirect.getMusicUrl,
+    AppConst.sourceKW + MusicSource.sourceTest: KWApiDirect.getMusicUrl,
+    AppConst.sourceMG + MusicSource.sourceDirect: MGApiDirect.getMusicUrl,
+    AppConst.sourceMG + MusicSource.sourceTemp: MGApiDirect.getMusicUrl,
+    AppConst.sourceMG + MusicSource.sourceTest: MGApiDirect.getMusicUrl,
+    AppConst.sourceTX + MusicSource.sourceDirect: TXApiDirect.getMusicUrl,
+    AppConst.sourceTX + MusicSource.sourceTemp: TXApiDirect.getMusicUrl,
+    AppConst.sourceTX + MusicSource.sourceTest: TXApiDirect.getMusicUrl,
+    AppConst.sourceWY + MusicSource.sourceDirect: WYApiDirect.getMusicUrl,
+    AppConst.sourceWY + MusicSource.sourceTemp: WYApiDirect.getMusicUrl,
+    AppConst.sourceWY + MusicSource.sourceTest: WYApiDirect.getMusicUrl,
+  };
 
   /// 获取歌曲播放地址
   /// [source] 平台 @see [AppConst.sourceMG]
   /// [musicSource] 音乐接口来源类型 @see [MusicSource]
   /// [songinfo] 歌曲信息
   /// [type] 音质
-  static Future getMusicUrl(String source, String musicSource, dynamic songinfo, type) async {
-
-    switch(source) {
-      case AppConst.sourceKG:
-        if(musicSource == MusicSource.sourceDirect) {
-          return KGApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTemp) {
-          return KGApiTemp.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTest) {
-          return KGApiTest.getMusicUrl(songinfo, type);
-        }
-        break;
-      case AppConst.sourceKW:
-        if(musicSource == MusicSource.sourceDirect) {
-          return KWApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTemp) {
-          return KWApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTest) {
-          return KWApiDirect.getMusicUrl(songinfo, type);
-        }
-        break;
-      case AppConst.sourceMG:
-        if(musicSource == MusicSource.sourceDirect) {
-          return MGApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTemp) {
-          return MGApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTest) {
-          return MGApiDirect.getMusicUrl(songinfo, type);
-        }
-        break;
-      case AppConst.sourceTX:
-        if(musicSource == MusicSource.sourceDirect) {
-          return TXApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTemp) {
-          return TXApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTest) {
-          return TXApiDirect.getMusicUrl(songinfo, type);
-        }
-        break;
-      case AppConst.sourceWY:
-        if(musicSource == MusicSource.sourceDirect) {
-          return WYApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTemp) {
-          return WYApiDirect.getMusicUrl(songinfo, type);
-        } else if(musicSource == MusicSource.sourceTest) {
-          return WYApiDirect.getMusicUrl(songinfo, type);
-        }
-        break;
+  static Future getMusicUrl(String source, String musicSource, dynamic songInfo, type) async {
+    try {
+      return musicUrlMap[source + musicSource](songInfo, type);
+    } catch(e, s) {
+      return getOtherSource(songInfo, source);
     }
   }
 }

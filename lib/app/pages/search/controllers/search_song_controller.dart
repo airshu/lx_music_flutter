@@ -10,7 +10,6 @@ class SearchSongController extends GetxController {
   int pageSize = 10;
   final songList = [].obs;
 
-
   /// 当前选中的平台
   final currentPlatform = ''.obs;
 
@@ -31,27 +30,10 @@ class SearchSongController extends GetxController {
   /// 搜索歌曲
   Future<void> search() async {
     try {
-      switch(currentPlatform.value) {
-        case AppConst.nameKW:
-
-          break;
-        case AppConst.nameKG:
-          List<MusicItem> list = await SongRepository.searchKuGou(keyword, pageSize, page);
-          Logger.debug('==search=== $list');
-          songList.addAll(list);
-          break;
-        case AppConst.nameWY:
-
-          break;
-        case AppConst.nameMG:
-
-          break;
-        case AppConst.nameTX:
-
-          break;
-      }
-
-
+      var res = await SongRepository.tipSearch(keyword, AppConst.sourceMap[currentPlatform.value]!);
+      Logger.debug('==search=== $res');
+      songList.value.clear();
+      songList.value.addAll(res);
     } catch (e, s) {
       Logger.error('$e $s');
     }
@@ -63,21 +45,15 @@ class SearchSongController extends GetxController {
     currentPlatform.value = name;
     switch (name) {
       case AppConst.nameKW:
-
         break;
       case AppConst.nameKG:
-
         break;
       case AppConst.nameWY:
-
         break;
       case AppConst.nameMG:
-
         break;
       case AppConst.nameTX:
-
         break;
     }
-
   }
 }

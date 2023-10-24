@@ -56,7 +56,7 @@ class _HomeViewsState extends State<HomeViews> {
             child: Text(
               '歌曲',
               style: TextStyle(
-                  color: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeSong ? Colors.blue : null),
+                  color: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeSong ? Colors.black : null),
             ),
             onPressed: () {
               Get.find<SearchSongController>().searchType.value = SearchSongController.searchTypeSong;
@@ -71,7 +71,7 @@ class _HomeViewsState extends State<HomeViews> {
             child: Text(
               '歌单',
               style: TextStyle(
-                color: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeList ? Colors.blue : null,
+                color: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeList ? Colors.black : null,
               ),
             ),
             onPressed: () {

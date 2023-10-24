@@ -41,19 +41,24 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
     for (var element in AppConst.platformNames) {
       children.add(
         DropdownMenuItem(
+          alignment: Alignment.center,
           value: element,
-          child: Text(element),
+          child: Text(element, style: TextStyle(fontSize: 12),),
         ),
       );
     }
-    return DropdownButton(
-      elevation: 0,
-      padding: EdgeInsets.zero,
-      value: searchSongController.currentPlatform.value,
-      items: children,
-      onChanged: (value) {
-        searchSongController.changePlatform(value.toString());
-      },
+    return Container(
+      alignment: Alignment.center,
+      child: DropdownButton(
+        elevation: 0,
+        padding: EdgeInsets.zero,
+        value: searchSongController.currentPlatform.value,
+        items: children,
+        alignment: Alignment.center,
+        onChanged: (value) {
+          searchSongController.changePlatform(value.toString());
+        },
+      ),
     );
   }
 
@@ -61,8 +66,8 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: SearchAppBar(
-        leadingWidth: 80,
-        leading: buildMenuWidget(),
+        leadingWidth: 88,
+        leading: Obx(() =>buildMenuWidget()),
         onSearch: (value) {
           searchSongController.songList.clear();
           searchSongController.search();

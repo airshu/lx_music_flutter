@@ -10,7 +10,7 @@ import 'package:lx_music_flutter/utils/player/music_player.dart';
 
 ///
 class AppService extends GetxService {
-  static AppService get to => Get.find();
+  static AppService get instance => Get.find();
 
   late String iv;
   late String presetKey;

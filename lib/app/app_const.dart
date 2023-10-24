@@ -37,6 +37,14 @@ class AppConst {
     nameTX,
   ];
 
+  static const sourceMap = {
+    nameKW: sourceKW,
+    nameKG: sourceKG,
+    nameWY: sourceWY,
+    nameMG: sourceMG,
+    nameTX: sourceTX,
+  };
+
   static Map<String, List<SortItem>> sortListMap = {
     AppConst.nameKW: KWSongList.sortList,
     AppConst.nameKG: KGSongList.sortList,
