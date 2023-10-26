@@ -6,6 +6,7 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
@@ -25,19 +26,30 @@ class KWSongList {
     SortItem(name: '最热', tid: 'hot', id: 'hot'),
   ];
 
-  static Future getSearch(String text, int page, int pageSize) async {
+  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
     String url =
-        'http://search.kuwo.cn/r.s?all=${Uri.encodeComponent(text)}&pn=${page - 1}&rn=$pageSize&rformat=json&encoding=utf8&ver=mbox&vipver=MUSIC_8.7.7.0_BCS37&plat=pc&devid=28156413&ft=playlist&pay=0&needliveshow=0';
+        'http://search.kuwo.cn/r.s?all=${Uri.encodeComponent(text)}&pn=${page - 1}&rn=$limit&rformat=json&encoding=utf8&ver=mbox&vipver=MUSIC_8.7.7.0_BCS37&plat=pc&devid=28156413&ft=playlist&pay=0&needliveshow=0';
 
     var result = await HttpCore.getInstance().get(url);
     result = result.replaceAll(RegExp(r"('(?=(,\s*')))|('(?=:))|((?<=([:,]\s*))')|((?<={)')|('(?=}))"), '"');
     result = json.decode(result);
-    List list = [];
-    result['abslist'].forEach((e) {
+    List<SearchListItem> list = [];
+    result['abslist'].forEach((item) {
       Logger.debug('$e');
-      list.add(e);
+      list.add(SearchListItem(
+        name: AppUtil.decodeName(item['name']),
+        source: AppConst.nameKW,
+        img: item['pic'],
+        playCount: AppUtil.formatPlayCount(item['playcnt']),
+        id: item['playlistid'],
+        author: AppUtil.decodeName(item['nickname']),
+        time: '',
+        grade: '',
+        total: item['songnum'],
+      ));
     });
-    return list;
+
+    return SearchListModel(list: list, limit: limit, total: int.parse(result['TOTAL']), source: AppConst.nameKW);
   }
 
   static RegExp mInfo = RegExp(r'level:(\w+),bitrate:(\d+),format:(\w+),size:([\w.]+)');
@@ -142,7 +154,7 @@ class KWSongList {
         }
         // types.reverse()
         return {
-          'singer': formatSinger(decodeName(item['artist'])),
+          'singer': AppUtil.formatSinger(decodeName(item['artist'])),
           'name': decodeName(item['name']),
           'albumName': albumName,
           'albumId': albumId,
@@ -238,7 +250,7 @@ class KWSongList {
       types = types.reversed.toList();
 
       return {
-        'singer': formatSinger(decodeName(item['artist'])),
+        'singer': AppUtil.formatSinger(decodeName(item['artist'])),
         'name': decodeName(item['name']),
         'albumName': decodeName(item['album']),
         'albumId': item['albumid'],
@@ -253,10 +265,6 @@ class KWSongList {
         'typeUrl': {},
       };
     }).toList();
-  }
-
-  static String formatSinger(String rawData) {
-    return rawData.replaceAll('&', '、');
   }
 
   static String decodeName(String? str) {

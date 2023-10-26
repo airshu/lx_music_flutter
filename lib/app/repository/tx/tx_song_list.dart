@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
@@ -224,12 +226,12 @@ class TXSongList {
   }
 
   static Future getListId(id) async {
-    if(RegExp('[?&:/]').hasMatch(id)) {
-      if(listDetailLinkRegExp.hasMatch(id)) {
+    if (RegExp('[?&:/]').hasMatch(id)) {
+      if (listDetailLinkRegExp.hasMatch(id)) {
         id = handleParseId(id);
       }
       Iterable<RegExpMatch> result = listDetailLinkRegExp.allMatches(id);
-      if(result.isEmpty) {
+      if (result.isEmpty) {
         result = listDetailLink2RegExp.allMatches(id);
       }
       id = result.elementAt(0);
@@ -293,5 +295,30 @@ class TXSongList {
         'typeUrl': {},
       };
     }).toList();
+  }
+
+  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
+    String url =
+        'http://c.y.qq.com/soso/fcgi-bin/client_music_search_songlist?page_no=${page - 1}&num_per_page=${limit}&format=json&query=${Uri.encodeComponent(text)}&remoteplace=txt.yqq.playlist&inCharset=utf8&outCharset=utf-8';
+    var headers = {
+      'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)',
+      'Referer': 'http://y.qq.com/portal/search.html',
+    };
+    var res = await HttpCore.getInstance().post(url, headers: headers);
+    if (res['code'] == 0) {
+      List<SearchListItem> list = [];
+      for (var item in res['data']['list']) {
+        list.add(SearchListItem(
+          name: item['dissname'],
+          source: AppConst.nameTX,
+          img: item['imgurl'],
+          playCount: AppUtil.formatPlayCount(item['listennum']),
+          id: item['dissid'].toString(),
+          author: item['creator']['name'],
+          total: item['song_count'],
+        ));
+      }
+      return SearchListModel(list: list, limit: limit, total: res['data']['sum'], source: AppConst.sourceTX);
+    }
   }
 }

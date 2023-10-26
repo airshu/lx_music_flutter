@@ -2,13 +2,16 @@ import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
 class SearchSongController extends GetxController {
   int page = 0;
 
   int pageSize = 10;
-  final songList = [].obs;
+  final searchModel = SearchMusicModel(list: [], allPage: 0, total: 0, source: '').obs;
+
+  final searchListModel = SearchListModel(list: [], limit: 0, total: 0, source: '').obs;
 
   /// 当前选中的平台
   final currentPlatform = ''.obs;
@@ -29,19 +32,21 @@ class SearchSongController extends GetxController {
 
   /// 搜索歌曲
   Future<void> search() async {
-    try {
-      var res = await SongRepository.tipSearch(keyword, AppConst.sourceMap[currentPlatform.value]!);
-      Logger.debug('==search=== $res');
-      songList.value.clear();
-      songList.value.addAll(res);
-    } catch (e, s) {
-      Logger.error('$e $s');
+    if (searchType.value == searchTypeSong) {
+      SearchMusicModel? model = await SongRepository.searchSongs(keyword, AppConst.sourceMap[currentPlatform.value]!, page);
+      if (model != null) {
+        searchModel.value = model;
+      }
+    } else if (searchType.value == searchTypeList) {
+      SearchListModel? model = await SongRepository.searchSongList(keyword, AppConst.sourceMap[currentPlatform.value]!, page);
+      if (model != null) {
+        searchListModel.value = model;
+      }
     }
   }
 
   /// 切换平台重新请求搜索结果
   void changePlatform(String name) {
-    songList.value = [];
     currentPlatform.value = name;
     switch (name) {
       case AppConst.nameKW:

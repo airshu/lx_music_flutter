@@ -104,7 +104,7 @@ class KWLeaderBoard {
       }
       // types.reverse()
       return {
-        'singer': KWSongList.formatSinger(KWSongList.decodeName(item['artist'])),
+        'singer': AppUtil.formatSinger(KWSongList.decodeName(item['artist'])),
         'name': KWSongList.decodeName(item['name']),
         'albumName': KWSongList.decodeName(item['album']),
         'albumId': item['albumid'],

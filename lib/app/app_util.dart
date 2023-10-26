@@ -106,6 +106,10 @@ class AppUtil {
     return date;
   }
 
+  static String formatSinger(String rawData) {
+    return rawData.replaceAll('&', '、');
+  }
+
   static List filterMusicInfoList(List rawList) {
     Map ids = {};
     List list = [];

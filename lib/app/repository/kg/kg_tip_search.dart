@@ -1,6 +1,6 @@
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
-/// 根据歌词搜索
+/// 根据词搜索热门词
 class KGTipSearch {
   static Future search(String keyword) async {
     String url = 'https://searchtip.kugou.com/getSearchTip?MusicTipCount=10&keyword=${Uri.encodeComponent(keyword)}';

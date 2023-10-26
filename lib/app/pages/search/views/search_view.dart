@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
 import 'package:lx_music_flutter/utils/player/music_player.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
@@ -69,7 +70,7 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
         leadingWidth: 88,
         leading: Obx(() =>buildMenuWidget()),
         onSearch: (value) {
-          searchSongController.songList.clear();
+          searchSongController.keyword = value;
           searchSongController.search();
         },
         onChanged: (value) {
@@ -116,22 +117,22 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
           searchSongController.page++;
           await searchSongController.search();
           easyRefreshController.finishLoad(
-              searchSongController.songList.length % searchSongController.pageSize >= searchSongController.pageSize
+              searchSongController.searchModel.value.list.length % searchSongController.pageSize >= searchSongController.pageSize
                   ? IndicatorResult.noMore
                   : IndicatorResult.success);
         },
         child: ListView.builder(
           itemBuilder: (context, index) {
-            MusicItem item = searchSongController.songList.elementAt(index);
+            SearchItem item = searchSongController.searchModel.value.list.elementAt(index);
             return buildItem(item);
           },
-          itemCount: searchSongController.songList.length,
+          itemCount: searchSongController.searchModel.value.list.length,
         ),
       ),
     );
   }
 
-  Widget buildItem(MusicItem item) {
+  Widget buildItem(SearchItem item) {
     return Card(
       child: Container(
         alignment: Alignment.center,
@@ -140,17 +141,17 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
           children: [
             Expanded(
                 child: Text(
-              item.songName,
+              item.name,
               maxLines: 2,
             )),
             IconButton(
                 onPressed: () async {
-                  MusicPlayer().add(item);
+                  // MusicPlayer().add(item);
                 },
                 icon: const Icon(Icons.play_arrow_outlined)),
             IconButton(
                 onPressed: () {
-                  MusicPlayerService().download(item);
+                  // MusicPlayerService().download(item);
                 },
                 icon: const Icon(Icons.download_outlined)),
           ],

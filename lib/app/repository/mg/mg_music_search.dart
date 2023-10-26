@@ -3,6 +3,7 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'dart:math';
 
 import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/md5_util.dart';
 
@@ -37,23 +38,17 @@ class MGMusicSearch {
     var res = await musicSearch(str, page, limit);
     var songResultData = res['songResultData'];
 
-    List list = filterData(songResultData['resultList']);
+    List<SearchItem> list = filterData(songResultData['resultList']);
 
     var total = songResultData['totalCount'];
 
     int allPage = (total / limit).ceil();
 
-    return {
-      'list': list,
-      'allPage': allPage,
-      'limit': limit,
-      'total': total,
-      'source': AppConst.sourceMG,
-    };
+    return SearchMusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceMG);
   }
 
-  static filterData(rawData) {
-    List list = [];
+  static List<SearchItem> filterData(rawData) {
+    List<SearchItem> list = [];
     Map ids = {};
     for (var item in rawData) {
       for (var data in item) {
@@ -61,48 +56,48 @@ class MGMusicSearch {
           break;
         }
         ids[data['copyrightId']] = '';
-        List types = [];
-        Map _types = {};
+        List qualityList = [];
+        Map qualityMap = {};
         for (var type in data['audioFormats']) {
           dynamic size;
           switch (type['formatType']) {
             case 'PQ':
               size = AppUtil.sizeFormate(type['asize'] ?? type['isize']);
-              types.add({
+              qualityList.add({
                 'type': '128k',
                 'size': size,
               });
-              _types['128k'] = {
+              qualityMap['128k'] = {
                 'size': size,
               };
               break;
             case 'HQ':
               size = AppUtil.sizeFormate(type['asize'] ?? type['isize']);
-              types.add({
+              qualityList.add({
                 'type': '320k',
                 'size': size,
               });
-              _types['320k'] = {
+              qualityMap['320k'] = {
                 'size': size,
               };
               break;
             case 'SQ':
               size = AppUtil.sizeFormate(type['asize'] ?? type['isize']);
-              types.add({
+              qualityList.add({
                 'type': 'flac',
                 'size': size,
               });
-              _types['flac'] = {
+              qualityMap['flac'] = {
                 'size': size,
               };
               break;
             case 'ZQ24':
               size = AppUtil.sizeFormate(type['asize'] ?? type['isize']);
-              types.add({
+              qualityList.add({
                 'type': 'flac24bit',
                 'size': size,
               });
-              _types['flac24bit'] = {
+              qualityMap['flac24bit'] = {
                 'size': size,
               };
               break;
@@ -114,25 +109,46 @@ class MGMusicSearch {
           img = 'http://d.musicapp.migu.cn$img';
         }
 
-        list.add({
-          'singer': AppUtil.formatSingerName(singers: data['singerList']),
-          'name': data['name'],
-          'albumName': data['album'],
-          'albumId': data['albumId'],
-          'songmid': data['songId'],
-          'copyrightId': data['copyrightId'],
-          'source': AppConst.sourceMG,
-          'interval': AppUtil.formatPlayTime(data['duration']),
-          'img': img,
-          'lrc': null,
-          'lrcUrl': data['lrcUrl'],
-          'mrcUrl': data['mrcurl'],
-          'trcUrl': data['trcUrl'],
-          'types': types,
-          '_types': _types,
-          'typeUrl': {},
-        });
+        list.add(SearchItem(
+          singer: AppUtil.formatSingerName(singers: data['singerList']),
+          name: data['name'],
+          albumName: data['album'],
+          albumId: data['albumId'],
+          songmid: data['songId'],
+          source: AppConst.sourceMG,
+          interval: AppUtil.formatPlayTime(data['duration']),
+          img: img,
+          lrc: '',
+          otherSource: '',
+          hash: '',
+          qualityList: qualityList,
+          qualityMap: qualityMap,
+          urlMap: {},
+          copyrightId: data['copyrightId'],
+          lrcUrl: data['lrcUrl'],
+          trcUrl: data['trcUrl'],
+          mrcUrl: data['mrcUrl'],
+        ));
+        // list.add({
+        //   'singer': AppUtil.formatSingerName(singers: data['singerList']),
+        //   'name': data['name'],
+        //   'albumName': data['album'],
+        //   'albumId': data['albumId'],
+        //   'songmid': data['songId'],
+        //   'copyrightId': data['copyrightId'],
+        //   'source': AppConst.sourceMG,
+        //   'interval': AppUtil.formatPlayTime(data['duration']),
+        //   'img': img,
+        //   'lrc': null,
+        //   'lrcUrl': data['lrcUrl'],
+        //   'mrcUrl': data['mrcurl'],
+        //   'trcUrl': data['trcUrl'],
+        //   'types': types,
+        //   '_types': _types,
+        //   'typeUrl': {},
+        // });
       }
     }
+    return list;
   }
 }

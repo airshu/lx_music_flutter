@@ -48,8 +48,8 @@ class SongListController extends GetxController {
 
   Future<void> search() async {
     try {
-      List list = await KWSongList.getSearch(keyword, page, pageSize);
-      songList.addAll(list);
+      // List list = await KWSongList.search(keyword, page, pageSize);
+      // songList.addAll(list);
     } catch (e, s) {
       Logger.error('$e $s');
     }

@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
@@ -768,5 +770,29 @@ class KGSongList {
       result = await getMusicInfos(result);
     }
     return result;
+  }
+
+  /// 根据关键字搜索歌单
+  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
+    String url =
+        'http://msearchretry.kugou.com/api/v3/search/special?keyword=${Uri.encodeComponent(text)}&page=${page}&pagesize=${limit}&showtype=10&filter=0&version=7910&sver=2';
+    var res = await HttpCore.getInstance().get(url);
+    if (res['errcode'] == 0) {
+      List<SearchListItem> list = [];
+      for (var item in res['body']['data']['info']) {
+        list.add(SearchListItem(
+          name: item['specialname'],
+          source: AppConst.nameKG,
+          img: item['imgurl'],
+          playCount: AppUtil.formatPlayCount(item['playcount']),
+          id: 'id_${item['specialid']}',
+          author: item['nickname'],
+          time: AppUtil.dateFormat(item['publishtime'], 'Y-M-D'),
+          grade: item['grade'],
+          total: item['songcount'],
+        ));
+      }
+      return SearchListModel(list: list, limit: limit, total: res['data']['total'], source: AppConst.nameKG);
+    }
   }
 }

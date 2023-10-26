@@ -1,7 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
+
+import 'mg_music_search.dart';
 
 class MGSongList {
   static const int limit_list = 10;
@@ -174,8 +178,7 @@ class MGSongList {
     if (cachedDetailInfo[id] != null) return Future.value(cachedDetailInfo[id]);
     final res = await HttpCore.getInstance()
         .get('https://c.musicapp.migu.cn/MIGUM3.0/resource/playlist/v2.0?playlistId=$id', headers: defaultHeaders);
-    if(res['code'] == successCode) {
-
+    if (res['code'] == successCode) {
       cachedDetailInfo[id] = DetailInfo(
         name: res['data']['title'],
         imgUrl: res['data']['imgItem']['img'],
@@ -185,6 +188,47 @@ class MGSongList {
       );
       return cachedDetailInfo[id];
     }
+  }
 
+  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
+    String url =
+        'https://jadeite.migu.cn/music_search/v3/search/searchAll?isCorrect=1&isCopyright=1&searchSwitch=%7B%22song%22%3A0%2C%22album%22%3A0%2C%22singer%22%3A0%2C%22tagSong%22%3A0%2C%22mvSong%22%3A0%2C%22bestShow%22%3A0%2C%22songlist%22%3A1%2C%22lyricSong%22%3A0%7D&pageSize=${limit}&text=${Uri.encodeComponent(text)}&pageNo=${page}&sort=0';
+
+    var timeStr = DateTime.now().millisecondsSinceEpoch;
+    var signResult = MGMusicSearch.createSignature(timeStr, text);
+    var headers = {
+      'uiVersion': 'A_music_3.6.1',
+      'deviceId': signResult.deviceId,
+      'timestamp': timeStr,
+      'sign': signResult.sign,
+      'channel': '0146921',
+      'User-Agent':
+          'Mozilla/5.0 (Linux; U; Android 11.0.0; zh-cn; MI 11 Build/OPR1.170623.032) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
+    };
+
+    var res = await HttpCore.getInstance().post(url, headers: headers);
+    if (res['songListResultData'] != null) {
+      List<SearchListItem> list = filterSongListResult(res['songListResultData']['result']);
+
+      return SearchListModel(
+          list: list, limit: limit, total: int.parse(res['songListResultData']['totalCount']), source: AppConst.nameMG);
+    }
+  }
+
+  static List<SearchListItem> filterSongListResult(raw) {
+    List<SearchListItem> list = [];
+    for (var item in raw) {
+      var playCount = int.parse(item['playNum']);
+      list.add(SearchListItem(
+        name: item['name'],
+        source: AppConst.sourceMG,
+        img: item['musicListPicUrl'],
+        playCount: playCount != null ? AppUtil.formatPlayCount(playCount) : '0',
+        id: item['id'],
+        author: item['userName'],
+        total: item['musicNum'],
+      ));
+    }
+    return list;
   }
 }

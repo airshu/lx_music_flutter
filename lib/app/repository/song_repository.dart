@@ -6,31 +6,34 @@ import 'package:lx_music_flutter/app/repository/kg/kg_api_direct.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_temp.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_test.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_music_search.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_song_list.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_api_direct.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_music_search.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_api_direct.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_music_search.dart';
+import 'package:lx_music_flutter/app/repository/mg/mg_song_list.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_api_direct.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_music_search.dart';
+import 'package:lx_music_flutter/app/repository/tx/tx_song_list.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_api_direct.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_music_search.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_song_list.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_tip_search.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/search_model.dart';
 import 'package:lx_music_flutter/services/app_service.dart';
 import 'package:lx_music_flutter/utils/encrypt_util.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
+import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:lx_music_flutter/utils/md5_util.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
 
 class SongRepository {
-
-
-
-
   /// 旧的酷狗搜索
   static Future<List<MusicItem>> searchKuGou(String keyword, int pageSize, int page) async {
     String url = '${Urls.kugouSearch}keyword=$keyword&cmd=300&pagesize=$pageSize&page=$page';
@@ -75,7 +78,6 @@ class SongRepository {
     }
   }
 
-
   static Map tipSearchMap = {
     AppConst.sourceKG: KGTipSearch.search,
     AppConst.sourceKW: KWTipSearch.search,
@@ -84,13 +86,12 @@ class SongRepository {
     AppConst.sourceWY: WYTipSearch.search,
   };
 
-  /// 搜索
+  /// 根据关键字搜索热门词，方便用户快速选择
   /// [keyword]
   /// [source]
   static Future tipSearch(String keyword, String source) async {
     return await tipSearchMap[source](keyword);
   }
-
 
   static Map musicSearchMap = {
     AppConst.sourceKG: KGMusicSearch.search,
@@ -100,11 +101,35 @@ class SongRepository {
     AppConst.sourceWY: WYMusicSearch.search,
   };
 
-  ///
-  static Future getOtherSource(musicInfo, String source) async {
-    return await musicSearchMap[source](musicInfo);
+  static Future getOtherSource(musicInfo, String source) async {}
+
+  /// 搜索歌曲
+  static Future<SearchMusicModel?> searchSongs(String str, String source, [int page = 1, int limit = 10]) async {
+    try {
+      return await musicSearchMap[source](str, page, limit);
+    } catch (e, s) {
+      Logger.error('$e  $s');
+    }
+    return null;
   }
 
+  static Map songListSearchMap = {
+    AppConst.sourceKG: KGSongList.search,
+    AppConst.sourceKW: KWSongList.search,
+    AppConst.sourceMG: MGSongList.search,
+    AppConst.sourceTX: TXSongList.search,
+    AppConst.sourceWY: WYSongList.search,
+  };
+
+  /// 搜索歌单
+  static Future<SearchListModel?> searchSongList(String str, String source, [int page = 1, int limit = 10]) async {
+    try {
+      return await songListSearchMap[source](str, page, limit);
+    } catch (e, s) {
+      Logger.error('$e  $s');
+    }
+    return null;
+  }
 
   static Map musicUrlMap = {
     AppConst.sourceKG + MusicSource.sourceDirect: KGApiDirect.getMusicUrl,
@@ -132,7 +157,7 @@ class SongRepository {
   static Future getMusicUrl(String source, String musicSource, dynamic songInfo, type) async {
     try {
       return musicUrlMap[source + musicSource](songInfo, type);
-    } catch(e, s) {
+    } catch (e, s) {
       return getOtherSource(songInfo, source);
     }
   }
