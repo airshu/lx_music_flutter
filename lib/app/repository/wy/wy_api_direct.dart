@@ -1,4 +1,5 @@
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
@@ -9,7 +10,7 @@ class WYApiDirect {
     'flac': 999000,
   };
 
-  static Future getMusicUrl(dynamic songInfo, String type) async {
+  static Future getMusicUrl(MusicItem songInfo, String type) async {
     try {
       String quality = qualitys[type];
       const target_url = 'https://interface3.music.163.com/eapi/song/enhance/player/url';

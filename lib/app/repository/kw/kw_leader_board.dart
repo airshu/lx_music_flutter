@@ -1,5 +1,7 @@
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/models/leader_board_model.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
@@ -55,21 +57,17 @@ class KWLeaderBoard {
   }
 
   static const int limit = 100;
+
   /// 获取排行榜列表
-  static Future getList(String bangid, int page) async {
+  static Future<LeaderBoardModel?> getList(String bangid, int page) async {
     String url = getUrl(page, limit, bangid);
     var result = await HttpCore.getInstance().get(url);
     int total = int.parse(result['num']);
-    List list = filterData(result['musiclist']);
-    return {
-      'total': total,
-      'list': list,
-      'page': page,
-      'source': 'kw',
-    };
+    List<LeaderBoardItem> list = filterData(result['musiclist']);
+    return LeaderBoardModel(list: list, total: total, source: AppConst.sourceKW, limit: limit, page: page);
   }
 
-  static List<Map<String, dynamic>> filterData(List<dynamic> rawList) {
+  static List<LeaderBoardItem> filterData(List<dynamic> rawList) {
     return rawList.map((item) {
       List<String> formats = item['formats'].split('|');
       List<Map<String, dynamic>> types = [];
@@ -103,21 +101,19 @@ class KWLeaderBoard {
         _types['flac24bit'] = {'size': null};
       }
       // types.reverse()
-      return {
-        'singer': AppUtil.formatSinger(KWSongList.decodeName(item['artist'])),
-        'name': KWSongList.decodeName(item['name']),
-        'albumName': KWSongList.decodeName(item['album']),
-        'albumId': item['albumid'],
-        'songmid': item['id'],
-        'source': 'kw',
-        'interval': AppUtil.formatPlayTime(int.parse(item['song_duration'])),
-        'img': item['pic'],
-        'lrc': null,
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      };
+      return LeaderBoardItem(
+        singer: AppUtil.formatSinger(KWSongList.decodeName(item['artist'])),
+        name: KWSongList.decodeName(item['name']),
+        albumName: KWSongList.decodeName(item['album']),
+        albumId: item['albumid'],
+        songmid: item['id'],
+        source: AppConst.sourceKW,
+        interval: AppUtil.formatPlayTime(int.parse(item['song_duration'])),
+        img: item['pic'] ?? '',
+        qualityList: types,
+        qualityMap: _types,
+        urlMap: {},
+      );
     }).toList();
   }
 
@@ -125,4 +121,3 @@ class KWLeaderBoard {
     return 'http://kbangserver.kuwo.cn/ksong.s?from=pc&fmt=json&pn=${p - 1}&rn=$l&type=bang&data=content&id=$id&show_copyright_off=0&pcmp4=1&isbang=1';
   }
 }
-

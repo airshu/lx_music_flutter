@@ -95,7 +95,7 @@ class _SongListState extends State<SongListView> {
                   songListController.page++;
                   await songListController.onLoad();
 
-                  easyRefreshController.finishLoad(songListController.songList.length % songListController.pageSize >= songListController.pageSize
+                  easyRefreshController.finishLoad(songListController.musicListModel.value.list.length % songListController.pageSize >= songListController.pageSize
                       ? IndicatorResult.noMore
                       : IndicatorResult.success);
                 },
@@ -107,7 +107,7 @@ class _SongListState extends State<SongListView> {
                   itemBuilder: (context, index) {
                     return buildSongItem(index);
                   },
-                  itemCount: songListController.songList.length,
+                  itemCount: songListController.musicListModel.value.list.length,
                   // child: ListView.builder(
                   //   itemBuilder: (context, index) {
                   //     return buildSongItem(index);
@@ -124,14 +124,14 @@ class _SongListState extends State<SongListView> {
   }
 
   Widget buildSongItem(int index) {
-    if (songListController.songList.length <= index) return Container();
-    final item = songListController.songList.elementAt(index);
+    if (songListController.musicListModel.value.list.length <= index) return Container();
+    MusicListItem item = songListController.musicListModel.value.list.elementAt(index);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () async {
 
         Logger.debug('====$item');
-        Get.to(SongListDetailView(songListItem: item), id: AppConst.navigatorKeySongList);
+        Get.to(SongListDetailView(musicListItem: item), id: AppConst.navigatorKeySongList);
 
 
         // String songmid = item['songmid'];
@@ -148,7 +148,7 @@ class _SongListState extends State<SongListView> {
         child: Column(
           children: [
             Image(
-              image: NetworkImage(item['img']),
+              image: NetworkImage(item.img),
               width: 64,
               height: 64,
               fit: BoxFit.cover,
@@ -157,7 +157,7 @@ class _SongListState extends State<SongListView> {
             // Text('${item['albumName']}'),
             // Text('${item['interval']}'),
             Text(
-              '${item['name']}',
+              '${item.name}',
               overflow: TextOverflow.ellipsis,
             ),
           ],

@@ -2,9 +2,11 @@ import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_leader_board.dart';
+import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_leader_board.dart';
+import 'package:lx_music_flutter/models/leader_board_model.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
@@ -12,41 +14,19 @@ class LeaderBoardController extends GetxController {
   int page = 1;
   int pageSize = 10;
 
-  /// 歌曲列表
-  final songList = [].obs;
-
   /// 当前选中的平台
   final currentPlatform = ''.obs;
 
   /// 当前排行榜列表
   final boardList = <Board>[].obs;
 
+  final leaderBoardModel = LeaderBoardModel(list: [], total: 0, source: '', limit: 0).obs;
+
   /// 打开某个排行榜榜单
   void openBoard(Board board) async {
-    switch (currentPlatform.value) {
-      case AppConst.nameKW:
-        var result = await KWLeaderBoard.getList(board.bangid, page);
-        Logger.debug('$result');
-        songList.value = result['list'];
-        break;
-      case AppConst.nameKG:
-        var result = await KGLeaderBoard.getList(board.bangid, page);
-        Logger.debug('$result');
-        songList.value = result['list'];
-        break;
-      case AppConst.nameWY:
-        var result = await WYLeaderBoard.getList(board.bangid, page);
-        songList.value = result['list'];
-        break;
-      case AppConst.nameMG:
-        var result = await MGLeaderBoard.getList(board.bangid, page);
-        songList.value = result['list'];
-        break;
-      case AppConst.nameTX:
-        var result = await TxLeaderBoard.getList(board.bangid, page);
-        songList.value = result['list'];
-        break;
-    }
+    print('======');
+    LeaderBoardModel? model = await SongRepository.getLeaderBoardList(AppConst.sourceMap[currentPlatform.value]!, board.bangid, page);
+    leaderBoardModel.value = model ?? LeaderBoardModel.empty();
   }
 
   @override
@@ -56,7 +36,6 @@ class LeaderBoardController extends GetxController {
   }
 
   void changePlatform(String name) {
-    songList.value = [];
     currentPlatform.value = name;
     switch (name) {
       case AppConst.nameKW:
@@ -78,5 +57,9 @@ class LeaderBoardController extends GetxController {
     if (boardList.isNotEmpty) {
       openBoard(boardList.value.elementAt(0));
     }
+  }
+
+  void getMusicUrl() {
+
   }
 }

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
@@ -129,7 +129,7 @@ class TXSongList {
     return 'https://u.y.qq.com/cgi-bin/musicu.fcg?loginUin=0&hostUin=0&format=json&inCharset=utf-8&outCharset=utf-8&notice=0&platform=wk_v15.json&needNewCode=0&data=$_data';
   }
 
-  static Future getList([String? sortId, String? tagId, int page = 0]) async {
+  static Future<MusicListModel?> getList([String? sortId, String? tagId, int page = 0]) async {
     String url = getListUrl(sortId, tagId, page);
     try {
       Response res = await Dio().request(url,
@@ -147,54 +147,68 @@ class TXSongList {
     }
   }
 
-  static Map filterList2(content, int page) {
-    List list = content['v_item'].map((basic) {
-      print(basic);
+  static MusicListModel filterList2(content, int page) {
+    List<MusicListItem> list = [];
+    for(var basic in content['v_item']) {
       basic = basic['basic'];
-      return {
-        'play_count': AppUtil.formatPlayCount(basic['play_cnt'] ?? 0),
-        'id': basic['tid'].toString(),
-        'author': basic['creator']['nick'],
-        'name': basic['title'],
-        'img': basic['cover']?['medium_url'] ?? basic['cover']?['default_url'],
-        'desc': AppUtil.decodeName(basic['desc']).replaceAll('<br/>', '\n'),
-        'source': 'tx',
-      };
-    }).toList();
-    return {
-      'list': list,
-      'total': content['total_cnt'],
-      'page': page,
-      'limit': limit_list,
-      'source': 'tx',
-    };
+      list.add(MusicListItem(
+        name: basic['title'],
+        source: AppConst.sourceTX,
+        img: basic['cover']?['medium_url'] ?? basic['cover']?['default_url'],
+        playCount: AppUtil.formatPlayCount(basic['play_cnt'] ?? 0),
+        id: basic['tid'].toString(),
+        author: basic['creator']['nick'],
+      ));
+    }
+      // return {
+      //   'play_count': AppUtil.formatPlayCount(basic['play_cnt'] ?? 0),
+      //   'id': basic['tid'].toString(),
+      //   'author': basic['creator']['nick'],
+      //   'name': basic['title'],
+      //   'img': basic['cover']?['medium_url'] ?? basic['cover']?['default_url'],
+      //   'desc': AppUtil.decodeName(basic['desc']).replaceAll('<br/>', '\n'),
+      //   'source': 'tx',
+      // };
+    return MusicListModel(list: list, limit: limit_list, total: content['total_cnt'], source: AppConst.sourceTX);
+    // return {
+    //   'list': list,
+    //   'total': content['total_cnt'],
+    //   'page': page,
+    //   'limit': limit_list,
+    //   'source': 'tx',
+    // };
   }
 
-  static Map filterList(data, int page) {
-    List list = data['v_playlist'].map((item) {
-      return {
-        'play_count': AppUtil.formatPlayCount(item['access_num'] ?? '0'),
-        'id': item['tid'],
-        'author': item['creator_info']['nick'],
-        'name': item['title'],
-        'time': item['modify_time'] ?? AppUtil.dateFormat(item['modify_time'] * 1000, 'Y-M-D'),
-        'img': item['cover_url_medium'],
-        'total': item['song_ids']?['length'],
-        'desc': item['desc'],
-        'source': 'tx',
-      };
+  static MusicListModel filterList(data, int page) {
+    List<MusicListItem> list = data['v_playlist'].map((item) {
+      return MusicListItem(
+        name: item['title'],
+        source: AppConst.sourceTX,
+        img: item['cover_url_medium'],
+        playCount: AppUtil.formatPlayCount(item['access_num'] ?? '0'),
+        id: item['tid'],
+        author: item['creator_info']['nick'],
+        time: item['modify_time'] ?? AppUtil.dateFormat(item['modify_time'] * 1000, 'Y-M-D'),
+        total: item['song_ids']?['length'],
+        desc: item['desc'],
+      );
+      // return {
+      //   'play_count': AppUtil.formatPlayCount(item['access_num'] ?? '0'),
+      //   'id': item['tid'],
+      //   'author': item['creator_info']['nick'],
+      //   'name': item['title'],
+      //   'time': item['modify_time'] ?? AppUtil.dateFormat(item['modify_time'] * 1000, 'Y-M-D'),
+      //   'img': item['cover_url_medium'],
+      //   'total': item['song_ids']?['length'],
+      //   'desc': item['desc'],
+      //   'source': 'tx',
+      // };
     }).toList();
 
-    return {
-      'list': list,
-      'total': data['total'],
-      'page': page,
-      'limit': limit_list,
-      'source': 'tx',
-    };
+    return MusicListModel(list: list, limit: limit_list, total: data['total'], source: AppConst.sourceTX);
   }
 
-  static Future getListDetail(String id, int page) async {
+  static Future<MusicModel?> getListDetail(String id, int page) async {
     id = await getListId(id);
 
     String url = getListDetailUrl(id);
@@ -205,20 +219,20 @@ class TXSongList {
 
     var listDetail = await HttpCore.getInstance().get(url, headers: headers);
     var cdlist = listDetail['cdlist'][0];
-    return {
-      'list': filterListDetail(cdlist['songlist']),
-      'page': 1,
-      'limit': cdlist['songlist'].length + 1,
-      'total': cdlist['songlist'].length,
-      'source': 'tx',
-      'info': DetailInfo(
+    return MusicModel(
+      list: filterListDetail(cdlist['songlist']),
+      page: 1,
+      limit: cdlist['songlist'].length + 1,
+      total: cdlist['songlist'].length,
+      source: 'tx',
+      info: DetailInfo(
         name: cdlist['dissname'],
         imgUrl: cdlist['logo'],
         desc: AppUtil.decodeName(cdlist['desc']).replaceAll('<br>', '\n'),
         author: cdlist['nickname'],
         playCount: AppUtil.formatPlayCount(cdlist['visitnum']),
       ),
-    };
+    );
   }
 
   static getListDetailUrl(id) {
@@ -244,7 +258,7 @@ class TXSongList {
     return res['url'];
   }
 
-  static List<Map<String, dynamic>> filterListDetail(List<dynamic> rawList) {
+  static List<MusicItem> filterListDetail(List<dynamic> rawList) {
     return rawList.map((item) {
       List<Map<String, dynamic>> types = [];
       Map<String, dynamic> _types = {};
@@ -272,53 +286,53 @@ class TXSongList {
         _types['flac24bit'] = {'size': size};
       }
 
-      return {
-        'singer': AppUtil.formatSingerName(singers: item['singer']),
-        'name': item['title'],
-        'albumName': item['album']['name'],
-        'albumId': item['album']['mid'],
-        'songmid': item['mid'],
-        'source': 'tx',
-        'interval': AppUtil.formatPlayTime(item['interval']),
-        'songId': item['id'],
-        'albumMid': item['album']['mid'],
-        'strMediaMid': item['file']['media_mid'],
-        'img': (item['album']['name'] == '' || item['album']['name'] == '空')
+      return MusicItem(
+        singer: AppUtil.formatSingerName(singers: item['singer']),
+        name: item['title'],
+        albumName: item['album']['name'],
+        albumId: item['album']['mid'],
+        songmid: item['mid'],
+        source: 'tx',
+        interval: AppUtil.formatPlayTime(item['interval']),
+        // songId: item['id'],
+        // albumMid: item['album']['mid'],
+        // strMediaMid: item['file']['media_mid'],
+        img: (item['album']['name'] == '' || item['album']['name'] == '空')
             ? (item['singer'] is Map && item['singer'].length > 0)
                 ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item['singer'][0]['mid']}.jpg'
                 : ''
             : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item['album']['mid']}.jpg',
-        'lrc': null,
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      };
+        lrc: null,
+        otherSource: null,
+        qualityList: types,
+        qualityMap: _types,
+        urlMap: {},
+      );
     }).toList();
   }
 
-  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
+  static Future<MusicListModel?> search(String text, [int page = 1, int limit = 10]) async {
     String url =
         'http://c.y.qq.com/soso/fcgi-bin/client_music_search_songlist?page_no=${page - 1}&num_per_page=${limit}&format=json&query=${Uri.encodeComponent(text)}&remoteplace=txt.yqq.playlist&inCharset=utf8&outCharset=utf-8';
     var headers = {
       'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)',
       'Referer': 'http://y.qq.com/portal/search.html',
     };
-    var res = await HttpCore.getInstance().post(url, headers: headers);
+    var res = await HttpCore.getInstance().get(url, headers: headers);
     if (res['code'] == 0) {
-      List<SearchListItem> list = [];
+      List<MusicListItem> list = [];
       for (var item in res['data']['list']) {
-        list.add(SearchListItem(
+        list.add(MusicListItem(
           name: item['dissname'],
-          source: AppConst.nameTX,
+          source: AppConst.sourceTX,
           img: item['imgurl'],
           playCount: AppUtil.formatPlayCount(item['listennum']),
           id: item['dissid'].toString(),
           author: item['creator']['name'],
-          total: item['song_count'],
+          total: '${item['song_count']}',
         ));
       }
-      return SearchListModel(list: list, limit: limit, total: res['data']['sum'], source: AppConst.sourceTX);
+      return MusicListModel(list: list, limit: limit, total: res['data']['sum'], source: AppConst.sourceTX);
     }
   }
 }

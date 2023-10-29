@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/song_list/controllers/song_list_detail_controller.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
 import 'package:lx_music_flutter/utils/dialog_util.dart';
@@ -11,10 +12,10 @@ import 'package:lx_music_flutter/utils/log/logger.dart';
 class SongListDetailView extends StatefulWidget {
   const SongListDetailView({
     super.key,
-    required this.songListItem,
+    required this.musicListItem,
   });
 
-  final Map songListItem;
+  final MusicListItem musicListItem;
 
   @override
   State<SongListDetailView> createState() => _SongListDetailViewState();
@@ -27,7 +28,7 @@ class _SongListDetailViewState extends State<SongListDetailView> {
   @override
   void initState() {
     controller = Get.put(SongListDetailController());
-    controller.getListDetail(widget.songListItem);
+    controller.getListDetail(widget.musicListItem);
     easyRefreshController = EasyRefreshController(
       controlFinishRefresh: true,
       controlFinishLoad: true,
@@ -83,7 +84,7 @@ class _SongListDetailViewState extends State<SongListDetailView> {
 
     return Obx(
       () {
-        DetailInfo detailInfo = controller.detailInfo.value['info'] ?? DetailInfo.empty();
+        DetailInfo detailInfo = controller.detailInfo.value.info ?? DetailInfo.empty();
         return Container(
           padding: const EdgeInsets.only(left: 8, right: 8),
           child: Row(
@@ -134,22 +135,22 @@ class _SongListDetailViewState extends State<SongListDetailView> {
       () => EasyRefresh(
         onRefresh: () async {
           controller.page = 1;
-          await controller.getListDetail(widget.songListItem);
+          await controller.getListDetail(widget.musicListItem);
 
           easyRefreshController.finishRefresh();
           easyRefreshController.resetFooter();
         },
         onLoad: () async {
           controller.page++;
-          await controller.getListDetail(widget.songListItem);
+          await controller.getListDetail(widget.musicListItem);
 
-          easyRefreshController.finishLoad((controller.detailInfo['list']?.length ?? 0) % controller.pageSize >= controller.pageSize
+          easyRefreshController.finishLoad((controller.detailInfo.value.list.length ?? 0) % controller.pageSize >= controller.pageSize
               ? IndicatorResult.noMore
               : IndicatorResult.success);
         },
         child: ListView.builder(
           itemBuilder: (context, index) {
-            var item = (controller.detailInfo['list'] as List).elementAt(index);
+            MusicItem item = controller.detailInfo.value.list.elementAt(index);
             return Container(
               child: Row(
                 children: [
@@ -159,20 +160,20 @@ class _SongListDetailViewState extends State<SongListDetailView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item['name'],
+                          item.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         Text(
-                          item['singer'],
+                          item.singer,
                           style: const TextStyle(fontSize: 11),
                         ),
                       ],
                     ),
                   ),
                   Text(
-                    item['interval'],
+                    item.interval,
                     style: const TextStyle(fontSize: 11),
                   ),
                   Builder(builder: (ctx) {
@@ -187,21 +188,22 @@ class _SongListDetailViewState extends State<SongListDetailView> {
               ),
             );
           },
-          itemCount: controller.detailInfo['list']?.length ?? 0,
+          itemCount: controller.detailInfo.value.list.length ?? 0,
         ),
       ),
     );
   }
 
-  void onTapListItem(BuildContext ctx, item) {
+  void onTapListItem(BuildContext ctx, MusicItem item) {
     List menus = [
       {
         'name': '播放',
         'onTap': () {
           Logger.debug('播放=====$item');
-          String id = widget.songListItem['id'];
-          String source = widget.songListItem['source'];
+          String id = widget.musicListItem.id;
+          String source = widget.musicListItem.source ?? '';
 
+          Get.back();
           MusicPlayerService.instance.play(source, item);
         },
       },
@@ -262,9 +264,9 @@ class _SongListDetailViewState extends State<SongListDetailView> {
 
   void handlePlayAll() {
     print('2323223');
-    String id = widget.songListItem['id'];
-    String source = widget.songListItem['source'];
-    List list = controller.detailInfo.value['list'];
+    String id = widget.musicListItem.id;
+    String source = widget.musicListItem.source ?? '';
+    List list = controller.detailInfo.value.list;
 
     String listId = getListId(id, source);
 

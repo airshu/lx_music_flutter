@@ -1,10 +1,11 @@
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
 class KWApiDirect {
-  static Future getMusicUrl(dynamic songinfo, String type) async {
+  static Future getMusicUrl(MusicItem songinfo, String type) async {
     try {
-      String url = 'http://www.kuwo.cn/api/v1/www/music/playUrl?mid=${songinfo['songmid']}&type=music&br=$type';
+      String url = 'http://www.kuwo.cn/api/v1/www/music/playUrl?mid=${songinfo.songmid}&type=music&br=$type';
       Map<String, dynamic> headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0',
         'Referer': 'http://kuwo.cn/',

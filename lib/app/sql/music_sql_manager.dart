@@ -1,6 +1,6 @@
 import 'package:lx_music_flutter/models/music_item.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class MusicSQLManager {
   MusicSQLManager._() {
@@ -56,7 +56,7 @@ class MusicSQLManager {
       tableName,
       item.toJson(),
       where: 'id = ?',
-      whereArgs: [item.id],
+      whereArgs: [item.songmid],
     );
   }
 

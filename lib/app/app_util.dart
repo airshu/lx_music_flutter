@@ -2,7 +2,10 @@ import 'dart:math' as math;
 
 class AppUtil {
 
-  static String sizeFormate(num size) {
+  static String sizeFormate(dynamic size) {
+    if(size is String) {
+      size = num.parse(size);
+    }
     if(size == 0) {
       return '0B';
     }
@@ -49,7 +52,10 @@ class AppUtil {
     return num.toString().padLeft(2, '0');
   }
 
-  static String formatPlayCount(int num) {
+  static String formatPlayCount(dynamic num) {
+    if(num is String) {
+      num = int.parse(num);
+    }
     if (num > 100000000) {
       return '${(num / 10000000).truncateToDouble() / 10}亿';
     }
@@ -108,67 +114,6 @@ class AppUtil {
 
   static String formatSinger(String rawData) {
     return rawData.replaceAll('&', '、');
-  }
-
-  static List filterMusicInfoList(List rawList) {
-    Map ids = {};
-    List list = [];
-    rawList.forEach((item) {
-      if (item['songId'] != null && ids.containsKey(item['songId']))
-        return;
-      ids[item['songId']] = true;
-      List types = [];
-      Map _types = {};
-      item['newRateFormats'].forEach((type) {
-        String size = '';
-        switch (type) {
-          case 'PQ':
-            size = AppUtil.sizeFormate(type['size'] ?? type['androidSize']);
-            types.add({'type': '128k', 'size': size});
-            _types['128k'] = {'size': size};
-            break;
-          case 'HQ':
-            size = AppUtil.sizeFormate(type['size'] ?? type['androidSize']);
-            types.add({'type': '320k', 'size': size});
-            _types['320k'] = {'size': size};
-            break;
-          case 'SQ':
-            size = AppUtil.sizeFormate(type['size'] ?? type['androidSize']);
-            types.add({'type': 'flac', 'size': size});
-            _types['flac'] = {'size': size};
-            break;
-          case 'ZQ':
-            size = AppUtil.sizeFormate(type['size'] ?? type['androidSize']);
-            types.add({'type': 'flac24bit', 'size': size});
-            _types['flac24bit'] = {'size': size};
-            break;
-        }
-      });
-      RegExp regExp = RegExp(r'(\d\d:\d\d)$');
-      final intervalTest = regExp.hasMatch(item['length']);
-      print(intervalTest);
-
-      list.add({
-        'singer': AppUtil.formatSingerName(singers: item['artists'], nameKey: 'name'),
-        'name': item['songName'],
-        'albumName': item['album'],
-        'albumId': item['albumId'],
-        'songmid': item['songId'],
-        'copyrightId': item['copyrightId'],
-        'source': 'mg',
-        'interval': intervalTest ? regExp.firstMatch(item['length'])?.group(1) : null,
-        'img': item['albumImgs']?.first,
-        'lrc': null,
-        'lrcUrl': item['lrcUrl'],
-        'mrcUrl': item['mrcUrl'],
-        'trcUrl': item['trcUrl'],
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      });
-    });
-    return list;
   }
 
 

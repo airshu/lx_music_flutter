@@ -1,6 +1,6 @@
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
 class KGMusicSearch {
@@ -11,7 +11,7 @@ class KGMusicSearch {
     return res;
   }
 
-  static SearchItem filterData(rawData) {
+  static MusicItem filterData(rawData) {
     List qualityList = [];
     Map qualityMap = {};
     dynamic size;
@@ -65,12 +65,12 @@ class KGMusicSearch {
       };
     }
 
-    return SearchItem(
+    return MusicItem(
       singer: AppUtil.decodeName(AppUtil.formatSingerName(singers: rawData['Singers'])),
       name: AppUtil.decodeName(rawData['SongName']),
       albumName: AppUtil.decodeName(rawData['AlbumName']),
-      albumId: rawData['AlbumID'],
-      songmid: rawData['Audioid'],
+      albumId: '${rawData['AlbumID']}',
+      songmid: '${rawData['Audioid']}',
       source: AppConst.sourceKG,
       interval: AppUtil.formatPlayTime(rawData['Duration']),
       img: '',
@@ -100,12 +100,12 @@ class KGMusicSearch {
     // };
   }
 
-  static Future<SearchMusicModel> search(String str, [int page = 1, int limit = 10]) async {
+  static Future<MusicModel> search(String str, [int page = 1, int limit = 10]) async {
     var res = await musicSearch(str, page, limit);
-    List<SearchItem> list = handleResult(res['data']['lists']);
+    List<MusicItem> list = handleResult(res['data']['lists']);
     int total = res['data']['total'];
     int allPage = (total / limit).ceil();
-    return SearchMusicModel(
+    return MusicModel(
       list: list,
       allPage: allPage,
       total: total,
@@ -113,9 +113,9 @@ class KGMusicSearch {
     );
   }
 
-  static List<SearchItem> handleResult(rawData) {
+  static List<MusicItem> handleResult(rawData) {
     Map ids = {};
-    List<SearchItem> list = [];
+    List<MusicItem> list = [];
     for (var item in rawData) {
       var key = '${item['Audioid']}${item['FileHash']}';
       if (ids.containsKey(key)) {

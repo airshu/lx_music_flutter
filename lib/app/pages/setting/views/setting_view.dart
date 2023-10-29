@@ -118,9 +118,9 @@ class _SettingViewState extends State<SettingView> {
 
         return Column(
           children: [
-            buildRadio('测试接口', MusicSource.sourceTest),
-            buildRadio('临时接口', MusicSource.sourceTemp),
-            buildRadio('试听接口（这是最后的选择）', MusicSource.sourceDirect),
+            buildRadio('测试接口', MusicSource.httpSourceTest),
+            buildRadio('临时接口', MusicSource.httpSourceTemp),
+            buildRadio('试听接口（这是最后的选择）', MusicSource.httpSourceDirect),
           ],
         );
       },

@@ -1,3 +1,4 @@
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
 import '../../../utils/log/logger.dart';
@@ -10,11 +11,11 @@ class MGApiDirect {
     'flac32bit': 'ZQ',
   };
 
-  static Future getMusicUrl(dynamic songInfo, String type) async {
+  static Future getMusicUrl(MusicItem songInfo, String type) async {
     try {
       String quality = qualitys[type] ?? '';
       String url =
-          'https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${songInfo['songmid']}&toneFlag=${quality}';
+          'https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${songInfo.songmid}&toneFlag=${quality}';
       var headers = {
         'channel': '0146951',
         'uid': 1234,

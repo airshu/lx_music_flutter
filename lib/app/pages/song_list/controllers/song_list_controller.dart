@@ -6,6 +6,7 @@ import 'package:lx_music_flutter/app/repository/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_song_list.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_song_list.dart';
+import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_song_list.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
@@ -16,9 +17,6 @@ class SongListController extends GetxController {
   int page = 1;
 
   int pageSize = 10;
-
-
-  final songList = [].obs;
 
   String keyword = '爱';
 
@@ -34,6 +32,8 @@ class SongListController extends GetxController {
   /// }
   final tagList = {}.obs;
   final sortList = <SortItem>[].obs;
+
+  final musicListModel = MusicListModel.empty().obs;
 
   @override
   void onInit() {
@@ -58,12 +58,11 @@ class SongListController extends GetxController {
   void openBoard(Board board) async {
     var result = await KWLeaderBoard.getList(board.bangid, page);
     Logger.debug('$result');
-    songList.value = result['list'];
+    // songList.value = result['list'];
   }
 
   Future<void> changePlatform(String name) async {
     Logger.debug('changePlatform  $name');
-    songList.value = [];
     currentPlatform.value = name;
     sortList.value = AppConst.sortListMap[name]!;
 
@@ -104,29 +103,8 @@ class SongListController extends GetxController {
     Logger.debug('openTag  ===item=$item  page=$page');
     String sortId = sortList.where((item) => item.isSelect).first.id;
     String tagId = item['id'].toString();
-    var res;
-    switch (currentPlatform.value) {
-      case AppConst.nameWY:
-        res = await WYSongList.getList();//todo
-        break;
-      case AppConst.nameMG:
-        res = await MGSongList.getList(sortId.toString(), tagId, page);
-        break;
-      case AppConst.nameKW:
-        res = await KWSongList.getList(sortId.toString(), tagId, page);
-        break;
-      case AppConst.nameKG:
-        res = await KGSongList.getList(sortId.toString(), tagId, page);
-        break;
-      case AppConst.nameTX:
-        res = await TXSongList.getList(sortId.toString(), tagId, page);
-        break;
-    }
-    Logger.debug('openTag  =======$res');
-
-    if(res != null) {
-      songList.value = res['list'];
-    }
+    MusicListModel? model = await SongRepository.getList(AppConst.sourceMap[currentPlatform.value]!, sortId.toString(), tagId, page);
+    musicListModel.value = model ?? MusicListModel.empty();
     currentTag.value = item;
   }
 

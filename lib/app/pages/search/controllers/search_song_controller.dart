@@ -2,16 +2,16 @@ import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
 class SearchSongController extends GetxController {
   int page = 0;
 
   int pageSize = 10;
-  final searchModel = SearchMusicModel(list: [], allPage: 0, total: 0, source: '').obs;
+  final searchMusicModel = MusicModel(list: [], allPage: 0, total: 0, source: '').obs;
 
-  final searchListModel = SearchListModel(list: [], limit: 0, total: 0, source: '').obs;
+  final searchListModel = MusicListModel(list: [], limit: 0, total: 0, source: '').obs;
 
   /// 当前选中的平台
   final currentPlatform = ''.obs;
@@ -33,14 +33,22 @@ class SearchSongController extends GetxController {
   /// 搜索歌曲
   Future<void> search() async {
     if (searchType.value == searchTypeSong) {
-      SearchMusicModel? model = await SongRepository.searchSongs(keyword, AppConst.sourceMap[currentPlatform.value]!, page);
+      MusicModel? model = await SongRepository.searchSongs(keyword, AppConst.sourceMap[currentPlatform.value]!, page);
       if (model != null) {
-        searchModel.value = model;
+        searchMusicModel.value.allPage = model.allPage;
+        searchMusicModel.value.total = model.total;
+        searchMusicModel.value.source = model.source;
+        searchMusicModel.value.list.addAll(model.list);
+        searchMusicModel.refresh();
       }
     } else if (searchType.value == searchTypeList) {
-      SearchListModel? model = await SongRepository.searchSongList(keyword, AppConst.sourceMap[currentPlatform.value]!, page);
+      MusicListModel? model = await SongRepository.searchSongList(keyword, AppConst.sourceMap[currentPlatform.value]!, page);
       if (model != null) {
-        searchListModel.value = model;
+        searchListModel.value.limit = model.limit;
+        searchListModel.value.total = model.total;
+        searchListModel.value.source = model.source;
+        searchListModel.value.list.addAll(model.list);
+        searchListModel.refresh();
       }
     }
   }

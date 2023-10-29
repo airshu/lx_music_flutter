@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
@@ -40,7 +40,7 @@ class KGSongList {
     return AppUtil.decodeName(afterStr.substring(0, index));
   }
 
-  static Future getListDetailBySpecialId(String id, int page) async {
+  static Future<MusicModel> getListDetailBySpecialId(String id, int page) async {
     var res = await HttpCore.getInstance().get(getSongListDetailurl(id));
     Iterable<RegExpMatch> listData = listDataRegExp.allMatches(res);
     Iterable<RegExpMatch> listInfo = listInfoRegExp.allMatches(res);
@@ -51,7 +51,7 @@ class KGSongList {
     String listDataStr = listData.elementAt(0).group(0) ?? '';
     List musicInfoList = jsonDecode(listDataStr.substring(14, listDataStr.length - 1));
 
-    var list = await getMusicInfos(musicInfoList);
+    List<MusicItem> list = await getMusicInfos(musicInfoList);
     String name = '';
     String pic = '';
     if (listInfo.isNotEmpty) {
@@ -66,22 +66,21 @@ class KGSongList {
       }
     }
     String desc = parseHtmlDesc(res) ?? '';
-    return {
-      'list': list,
-      'page': 1,
-      'limit': 100000,
-      'total': list.length,
-      'source': 'kg',
-      'info': DetailInfo(
-        author: '',
-        name: name,
-        imgUrl: pic,
-        desc: desc,
-      ),
-    };
+    return MusicModel(
+        list: list,
+        limit: 100000,
+        total: list.length,
+        source: AppConst.sourceKG,
+        page: 1,
+        info: DetailInfo(
+          author: '',
+          name: name,
+          imgUrl: pic,
+          desc: desc,
+        ));
   }
 
-  static Future getMusicInfos(list) async {
+  static Future<List<MusicItem>> getMusicInfos(list) async {
     List duDuplicationList = deDuplication(list);
     List list1 = duDuplicationList
         .map((item) => ({
@@ -94,9 +93,9 @@ class KGSongList {
     return filterData2(list4);
   }
 
-  static List<Map<String, dynamic>> filterData2(List<dynamic> rawList) {
+  static List<MusicItem> filterData2(List<dynamic> rawList) {
     Set<String> ids = {};
-    List<Map<String, dynamic>> list = [];
+    List<MusicItem> list = [];
     for (var item in rawList) {
       if (item == null) continue;
       if (ids.contains(item['audio_info']['audio_id'])) continue;
@@ -151,22 +150,35 @@ class KGSongList {
           'hash': item['audio_info']['hash_high'],
         };
       }
-      list.add({
-        'singer': AppUtil.decodeName(item['author_name']),
-        'name': AppUtil.decodeName(item['songname']),
-        'albumName': AppUtil.decodeName(item['album_info']['album_name']),
-        'albumId': item['album_info']['album_id'],
-        'songmid': item['audio_info']['audio_id'],
-        'source': 'kg',
-        'interval': AppUtil.formatPlayTime(int.parse(item['audio_info']['timelength']) ~/ 1000),
-        'img': null,
-        'lrc': null,
-        'hash': item['audio_info']['hash'],
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      });
+      list.add(MusicItem(
+        name: AppUtil.decodeName(item['songname']),
+        source: AppConst.sourceKG,
+        img: '',
+        singer: AppUtil.decodeName(item['author_name']),
+        albumName: AppUtil.decodeName(item['album_name']),
+        albumId: item['album_info']['album_id'],
+        qualityList: types,
+        interval: AppUtil.formatPlayTime(int.parse(item['audio_info']['timelength']) ~/ 1000),
+        qualityMap: _types,
+        songmid: item['audio_info']['audio_id'],
+        urlMap: {},
+      ));
+      // list.add({
+      //   'singer': AppUtil.decodeName(item['author_name']),
+      //   'name': AppUtil.decodeName(item['songname']),
+      //   'albumName': AppUtil.decodeName(item['album_info']['album_name']),
+      //   'albumId': item['album_info']['album_id'],
+      //   'songmid': item['audio_info']['audio_id'],
+      //   'source': 'kg',
+      //   'interval': AppUtil.formatPlayTime(int.parse(item['audio_info']['timelength']) ~/ 1000),
+      //   'img': null,
+      //   'lrc': null,
+      //   'hash': item['audio_info']['hash'],
+      //   'otherSource': null,
+      //   'types': types,
+      //   '_types': _types,
+      //   'typeUrl': {},
+      // });
     }
     return list;
   }
@@ -276,9 +288,9 @@ class KGSongList {
     'info': null,
   };
 
-  static Future getList([String? sortId, String? tagId, int page = 0]) async {
-    var tasks = await getSongList(sortId, tagId, page);
-    dynamic info;
+  static Future<MusicListModel> getList([String? sortId, String? tagId, int page = 0]) async {
+    List<MusicListItem> tasks = await getSongList(sortId, tagId, page);
+    MusicListModel? info;
     if (currentTagInfo['id'] == tagId) {
       info = currentTagInfo['info'];
     } else {
@@ -291,13 +303,11 @@ class KGSongList {
       tasks.addAll(recommendList);
     }
 
-    return {
-      'list': tasks,
-      ...info,
-    };
+    info?.list = tasks;
+    return info!;
   }
 
-  static Future getSongList([String? sortId, String? tagId, int page = 0]) async {
+  static Future<List<MusicListItem>> getSongList([String? sortId, String? tagId, int page = 0]) async {
     String url = getSonglistUrl(sortId, tagId, page);
     var res = await HttpCore.getInstance().get(url);
     return filterList(res['special_db']);
@@ -311,33 +321,41 @@ class KGSongList {
     return 'http://www2.kugou.kugou.com/yueku/v9/special/single/${id}-5-9999.html';
   }
 
-  static List filterList(List rawList) {
+  static List<MusicListItem> filterList(List rawList) {
     return rawList.map((item) {
-      return {
-        'play_count': item['total_play_count'] ?? AppUtil.formatPlayCount(item['play_count']),
-        'id': 'id_${item['specialid']}',
-        'author': item['nickname'],
-        'name': item['specialname'],
-        'time': AppUtil.dateFormat(item['publish_time'] ?? item['publishtime'], 'Y-M-D'),
-        'img': item['img'] ?? item['imgurl'],
-        'total': item['songcount'],
-        'grade': item['grade'],
-        'desc': item['intro'],
-        'source': 'kg',
-      };
+      return MusicListItem(
+        name: item['specialname'],
+        source: AppConst.sourceKG,
+        img: item['img'] ?? item['imgurl'],
+        playCount: item['total_play_count'] ?? AppUtil.formatPlayCount(item['play_count']),
+        id: 'id_${item['specialid']}',
+        author: item['nickname'],
+        total: item['songcount'],
+        grade: '${item['grade']}',
+        desc: item['intro'],
+        time: AppUtil.dateFormat(item['publish_time'] ?? item['publishtime'], 'Y-M-D'),
+      );
+      // return {
+      //   'play_count': item['total_play_count'] ?? AppUtil.formatPlayCount(item['play_count']),
+      //   'id': 'id_${item['specialid']}',
+      //   'author': item['nickname'],
+      //   'name': item['specialname'],
+      //   'time': AppUtil.dateFormat(item['publish_time'] ?? item['publishtime'], 'Y-M-D'),
+      //   'img': item['img'] ?? item['imgurl'],
+      //   'total': item['songcount'],
+      //   'grade': item['grade'],
+      //   'desc': item['intro'],
+      //   'source': 'kg',
+      // };
     }).toList();
   }
 
-  static Future getListInfo(String tagId) async {
+  static Future<MusicListModel?> getListInfo(String tagId) async {
     String url = getInfoUrl(tagId);
     var res = await HttpCore.getInstance().get(url);
     if (res['status'] == 1) {
-      return {
-        'limit': res['data']['params']['pagesize'],
-        'page': res['data']['params']['p'],
-        'total': res['data']['params']['total'],
-        'source': 'kg',
-      };
+      return MusicListModel(
+          list: [], limit: res['data']['params']['pagesize'], total: res['data']['params']['total'], source: AppConst.sourceKG);
     }
   }
 
@@ -367,7 +385,7 @@ class KGSongList {
 
   static const int listDetailLimit = 10000;
 
-  static Future getListDetail(String id, int page) async {
+  static Future<MusicModel?> getListDetail(String id, int page) async {
     if (id.contains('special/single/')) {
       id = id.replaceAllMapped(listDetailLink, (match) => match.group(1)!);
     } else if (RegExp(r'https?:').hasMatch(id)) {
@@ -383,7 +401,7 @@ class KGSongList {
     return getListDetailBySpecialId(id, page);
   }
 
-  static Future getUserListDetail(String link, int page) async {
+  static Future<MusicModel?> getUserListDetail(String link, int page) async {
     if (link.contains('#')) {
       link.replaceAll(RegExp(r'#.*$'), '');
     }
@@ -469,7 +487,7 @@ class KGSongList {
     return getuserListDetailByLink(res['body'], link);
   }
 
-  static Future getUserListDetailByCode(String id) async {
+  static Future<MusicModel> getUserListDetailByCode(String id) async {
     String url = 'http://t.kugou.com/command/';
     var headers = {
       'KG-RC': 1,
@@ -523,13 +541,13 @@ class KGSongList {
       };
       songList = await HttpCore.getInstance().post(_url, headers: headers, data: body);
     }
-    List list = await getMusicInfos(songList ?? songInfo['list']);
-    return {
-      'list': list,
-      'page': 1,
-      'limit': info['count'],
-      'total': list.length,
-      'source': 'kg',
+    List<MusicItem> list = await getMusicInfos(songList ?? songInfo['list']);
+    return MusicModel(
+      list: list,
+      page: 1,
+      limit: info['count'],
+      total: list.length,
+      source: 'kg',
       info: DetailInfo(
         name: info['name'],
         imgUrl: (info['img_size'] && info['img_size'].replace('{size}', 240)) ?? info['img'],
@@ -537,10 +555,10 @@ class KGSongList {
         author: info['username'],
         // play_count: formatPlayCount(info.count),
       ),
-    };
+    );
   }
 
-  static Future getuserListDetailByLink(info, String link) async {
+  static Future<MusicModel> getuserListDetailByLink(info, String link) async {
     var listInfo = info['0'];
     var total = listInfo['count'];
     List tasks = [];
@@ -563,13 +581,13 @@ class KGSongList {
 
     var result = await getMusicInfos(tasks);
 
-    return {
-      'list': result,
-      'page': page,
-      'limit': listDetailLimit,
-      'total': result.length,
-      'source': 'kg',
-      'info': DetailInfo(
+    return MusicModel(
+      list: result,
+      page: page,
+      limit: listDetailLimit,
+      total: total,
+      source: AppConst.sourceKG,
+      info: DetailInfo(
         name: listInfo['name'],
         imgUrl: listInfo['pic'] != null ? listInfo['pic'].replace('{size}', 240) : '',
         desc: '',
@@ -578,10 +596,26 @@ class KGSongList {
         playCount: '',
         // play_count: formatPlayCount(listInfo.count),
       ),
-    };
+    );
+    // return {
+    //   'list': result,
+    //   'page': page,
+    //   'limit': listDetailLimit,
+    //   'total': result.length,
+    //   'source': 'kg',
+    //   'info': DetailInfo(
+    //     name: listInfo['name'],
+    //     imgUrl: listInfo['pic'] != null ? listInfo['pic'].replace('{size}', 240) : '',
+    //     desc: '',
+    //     //body.result.info.list_desc,
+    //     author: listInfo['list_create_username'],
+    //     playCount: '',
+    //     // play_count: formatPlayCount(listInfo.count),
+    //   ),
+    // };
   }
 
-  static Future getUserListDetail2(String id) async {
+  static Future<MusicModel> getUserListDetail2(String id) async {
     if (id.length > 1000) {
       throw 'get list error';
     }
@@ -599,14 +633,14 @@ class KGSongList {
     String url = 'https://mobiles.kugou.com/api/v5/special/info_v2?${params}&signature=${signatureParams(params, 5)}';
     var info = await HttpCore.getInstance().get(url, headers: headers);
     var songInfo = await createGetListDetail2Task(id, info['songcount']);
-    var list = await getMusicInfos(songInfo);
-    return {
-      'list': list,
-      'page': 1,
-      'limit': listDetailLimit,
-      'total': list.length,
-      'source': 'kg',
-      'info': DetailInfo(
+    List<MusicItem> list = await getMusicInfos(songInfo);
+    return MusicModel(
+      list: list,
+      page: 1,
+      limit: listDetailLimit,
+      total: list.length,
+      source: AppConst.sourceKG,
+      info: DetailInfo(
         name: info['specialname'],
         imgUrl: info['imgurl'] != null ? info['imgurl'].replace('{size}', 240) : '',
         author: info['nickname'],
@@ -614,7 +648,22 @@ class KGSongList {
         playCount: AppUtil.formatPlayCount(info['playcount']),
         // desc: body.result.info.list_desc,
       ),
-    };
+    );
+    // return {
+    //   'list': list,
+    //   'page': 1,
+    //   'limit': listDetailLimit,
+    //   'total': list.length,
+    //   'source': 'kg',
+    //   'info': DetailInfo(
+    //     name: info['specialname'],
+    //     imgUrl: info['imgurl'] != null ? info['imgurl'].replace('{size}', 240) : '',
+    //     author: info['nickname'],
+    //     desc: info['intro'],
+    //     playCount: AppUtil.formatPlayCount(info['playcount']),
+    //     // desc: body.result.info.list_desc,
+    //   ),
+    // };
   }
 
   static Future createGetListDetail2Task(String id, int total) async {
@@ -647,7 +696,7 @@ class KGSongList {
     return tasks;
   }
 
-  static Future getUserListDetail3(String chain, int page) async {
+  static Future<MusicModel> getUserListDetail3(String chain, int page) async {
     String url = 'http://m.kugou.com/schain/transfer?pagesize=${listDetailLimit}&chain=${chain}&su=1&page=${page}&n=0.7928855356604456';
     var headers = {
       'User-Agent':
@@ -668,40 +717,68 @@ class KGSongList {
     }
 
     var list = await getMusicInfos(songInfo['list']);
-    return {
-      'list': list,
-      'page': 1,
-      'limit': listDetailLimit,
-      'total': list.length,
-      'source': 'kg',
-      'info': DetailInfo(
+    return MusicModel(
+      list: list,
+      page: 1,
+      limit: listDetailLimit,
+      total: list.length,
+      source: AppConst.sourceKG,
+      info: DetailInfo(
         name: songInfo['info']['name'],
         imgUrl: songInfo['info']['img'],
         // desc: body.result.info.list_desc,
         author: songInfo['info']['username'],
         // play_count: formatPlayCount(info.count),
       ),
-    };
+    );
+    // return {
+    //   'list': list,
+    //   'page': 1,
+    //   'limit': listDetailLimit,
+    //   'total': list.length,
+    //   'source': 'kg',
+    //   'info': DetailInfo(
+    //     name: songInfo['info']['name'],
+    //     imgUrl: songInfo['info']['img'],
+    //     // desc: body.result.info.list_desc,
+    //     author: songInfo['info']['username'],
+    //     // play_count: formatPlayCount(info.count),
+    //   ),
+    // };
   }
 
-  static Future getUserListDetail4(songInfo, String chain, int page) async {
+  static Future<MusicModel> getUserListDetail4(songInfo, String chain, int page) async {
     var limit = 100;
     var listInfo = await getListInfoByChain(chain);
     var list = await getUserListDetailById(songInfo.id, page, limit);
-    return {
-      'list': list ?? [],
-      'page': page,
-      'limit': limit,
-      'total': list.length ?? 0,
-      'source': 'kg',
-      'info': DetailInfo(
+    return MusicModel(
+      list: list,
+      page: page,
+      limit: limit,
+      total: list.length ?? 0,
+      source: AppConst.sourceKG,
+      info: DetailInfo(
         name: listInfo['specialname'],
         imgUrl: listInfo['imgurl'] != null ? listInfo['imgurl'].replace('{size}', 240) : '',
         // desc: body.result.info.list_desc,
         author: listInfo['nickname'],
         // play_count: formatPlayCount(info.count),
       ),
-    };
+    );
+    // return {
+    //   'list': list ?? [],
+    //   'page': page,
+    //   'limit': limit,
+    //   'total': list.length ?? 0,
+    //   'source': 'kg',
+    //   'info': DetailInfo(
+    //     name: listInfo['specialname'],
+    //     imgUrl: listInfo['imgurl'] != null ? listInfo['imgurl'].replace('{size}', 240) : '',
+    //     // desc: body.result.info.list_desc,
+    //     author: listInfo['nickname'],
+    //     // play_count: formatPlayCount(info.count),
+    //   ),
+    // };
   }
 
   static Future getListInfoByChain(String chain) async {
@@ -738,26 +815,40 @@ class KGSongList {
 
   static signatureParams(String params, int i) {}
 
-  static Future getUserListDetail5(String chain) async {
+  static Future<MusicModel> getUserListDetail5(String chain) async {
     var listInfo = await getListInfoByChain(chain);
-    var list = await getUserListDetailByPcChain(chain);
-    return {
-      'list': list ?? [],
-      'page': 1,
-      'limit': listDetailLimit,
-      'total': list.length ?? 0,
-      'source': 'kg',
-      'info': DetailInfo(
+    List<MusicItem>? list = await getUserListDetailByPcChain(chain);
+    return MusicModel(
+      list: list ?? [],
+      page: 1,
+      limit: listDetailLimit,
+      total: list?.length ?? 0,
+      source: AppConst.sourceKG,
+      info: DetailInfo(
         name: listInfo['specialname'],
         imgUrl: listInfo['imgurl'] != null ? listInfo['imgurl'].replace('{size}', 240) : '',
         // desc: body.result.info.list_desc,
         author: listInfo['nickname'],
         // play_count: formatPlayCount(info.count),
       ),
-    };
+    );
+    // return {
+    //   'list': list ?? [],
+    //   'page': 1,
+    //   'limit': listDetailLimit,
+    //   'total': list?.length ?? 0,
+    //   'source': 'kg',
+    //   'info': DetailInfo(
+    //     name: listInfo['specialname'],
+    //     imgUrl: listInfo['imgurl'] != null ? listInfo['imgurl'].replace('{size}', 240) : '',
+    //     // desc: body.result.info.list_desc,
+    //     author: listInfo['nickname'],
+    //     // play_count: formatPlayCount(info.count),
+    //   ),
+    // };
   }
 
-  static Future getUserListDetailByPcChain(String chain) async {
+  static Future<List<MusicItem>?> getUserListDetailByPcChain(String chain) async {
     String url = 'http://www.kugou.com/share/${chain}.html';
     var headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
@@ -767,20 +858,19 @@ class KGSongList {
     RegExp regExp = RegExp(r'var\sdataFromSmarty\s=\s(\[.+?\])');
     var result = regExp.firstMatch(res['body'] as String)?.group(1);
     if (result != null) {
-      result = await getMusicInfos(result);
+      return await getMusicInfos(result);
     }
-    return result;
   }
 
   /// 根据关键字搜索歌单
-  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
+  static Future<MusicListModel?> search(String text, [int page = 1, int limit = 10]) async {
     String url =
         'http://msearchretry.kugou.com/api/v3/search/special?keyword=${Uri.encodeComponent(text)}&page=${page}&pagesize=${limit}&showtype=10&filter=0&version=7910&sver=2';
     var res = await HttpCore.getInstance().get(url);
     if (res['errcode'] == 0) {
-      List<SearchListItem> list = [];
-      for (var item in res['body']['data']['info']) {
-        list.add(SearchListItem(
+      List<MusicListItem> list = [];
+      for (var item in res['data']['info']) {
+        list.add(MusicListItem(
           name: item['specialname'],
           source: AppConst.nameKG,
           img: item['imgurl'],
@@ -789,10 +879,10 @@ class KGSongList {
           author: item['nickname'],
           time: AppUtil.dateFormat(item['publishtime'], 'Y-M-D'),
           grade: item['grade'],
-          total: item['songcount'],
+          total: '${item['songcount']}',
         ));
       }
-      return SearchListModel(list: list, limit: limit, total: res['data']['total'], source: AppConst.nameKG);
+      return MusicListModel(list: list, limit: limit, total: res['data']['total'], source: AppConst.nameKG);
     }
   }
 }

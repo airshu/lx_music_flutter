@@ -12,14 +12,14 @@ class Settings {
 
 
   bool startupAutoPlay = false; // 启动自动播放
-  String musicSource = MusicSource.sourceDirect; // 音乐来源
+  String musicSource = MusicSource.httpSourceDirect; // 音乐来源
 
 
 
   Future<void> init() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     startupAutoPlay = sharedPreferences.getBool('startupAutoPlay') ?? false;
-    musicSource = sharedPreferences.getString('musicSource') ?? MusicSource.sourceDirect;
+    musicSource = sharedPreferences.getString('musicSource') ?? MusicSource.httpSourceDirect;
   }
 
   Future<void> refresh() async {
@@ -37,7 +37,13 @@ class Settings {
 
 /// 音乐来源
 class MusicSource {
-  static const String sourceDirect = 'direct';
-  static const String sourceTemp = 'temp';
-  static const String sourceTest = 'test';
+  static const String httpSourceDirect = 'direct';
+  static const String httpSourceTemp = 'temp';
+  static const String httpSourceTest = 'test';
+
+  static const List httpSourceList = [
+    httpSourceDirect,
+    httpSourceTemp,
+    httpSourceTest,
+  ];
 }

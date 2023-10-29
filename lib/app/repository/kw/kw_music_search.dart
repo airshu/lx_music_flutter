@@ -1,6 +1,6 @@
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
 class KWMusicSearch {
@@ -11,18 +11,18 @@ class KWMusicSearch {
     return res;
   }
 
-  static Future<SearchMusicModel> search(String str, [int page = 1, int limit = 10]) async {
+  static Future<MusicModel> search(String str, [int page = 1, int limit = 10]) async {
     var res = await musicSearch(str, page, limit);
-    List<SearchItem> list = handleResult(res['data']['lists']);
-    int total = res['data']['total'];
+    List<MusicItem> list = handleResult(res['abslist']);
+    int total = int.parse(res['TOTAL'] ?? '0');
     int allPage = (total / limit).ceil();
-    return SearchMusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceKW);
+    return MusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceKW);
   }
 
   static RegExp minfo = RegExp(r'/level:(\w+),bitrate:(\d+),format:(\w+),size:([\w.]+)/');
 
-  static List<SearchItem> handleResult(rawData) {
-    List<SearchItem> result = [];
+  static List<MusicItem> handleResult(rawData) {
+    List<MusicItem> result = [];
     if (rawData == null) {
       return [];
     }
@@ -57,7 +57,7 @@ class KWMusicSearch {
           }
         }
       }
-      result.add(SearchItem(
+      result.add(MusicItem(
         albumName: '',
         hash: '',
         urlMap: {},
@@ -65,7 +65,7 @@ class KWMusicSearch {
         singer: AppUtil.formatSinger(AppUtil.decodeName(info['ARTIST'])),
         songmid: songId,
         albumId: AppUtil.decodeName(info['ALBUMID'] ?? ''),
-        interval: AppUtil.formatPlayTime(info['DURATION'] ?? 0),
+        interval: AppUtil.formatPlayTime(int.parse(info['DURATION'] ?? '') ?? 0),
         lrc: '',
         img: '',
         otherSource: '',

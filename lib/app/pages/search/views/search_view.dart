@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
+import 'package:lx_music_flutter/app/pages/song_list/views/song_list_detail_view.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
+import 'package:lx_music_flutter/utils/dialog_util.dart';
+import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:lx_music_flutter/utils/player/music_player.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
 
@@ -44,7 +47,10 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
         DropdownMenuItem(
           alignment: Alignment.center,
           value: element,
-          child: Text(element, style: TextStyle(fontSize: 12),),
+          child: Text(
+            element,
+            style: TextStyle(fontSize: 12),
+          ),
         ),
       );
     }
@@ -68,7 +74,7 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
     return Scaffold(
       appBar: SearchAppBar(
         leadingWidth: 88,
-        leading: Obx(() =>buildMenuWidget()),
+        leading: Obx(() => buildMenuWidget()),
         onSearch: (value) {
           searchSongController.keyword = value;
           searchSongController.search();
@@ -86,59 +92,156 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
   }
 
   Widget buildListWidget() {
-    return Obx(
-      () => EasyRefresh(
-        controller: easyRefreshController,
-        header: const ClassicHeader(),
-        footer: const ClassicFooter(),
-        onRefresh: () async {
-          if (searchSongController.keyword.isEmpty) {
-            ToastUtil.show('请输入关键字');
-            return;
-          }
-          if (!mounted) {
-            return;
-          }
+    return EasyRefresh(
+      controller: easyRefreshController,
+      header: const ClassicHeader(),
+      footer: const ClassicFooter(),
+      onRefresh: () async {
+        if (searchSongController.keyword.isEmpty) {
+          ToastUtil.show('请输入关键字');
+          return;
+        }
+        if (!mounted) {
+          return;
+        }
 
-          searchSongController.page = 0;
-          searchSongController.search();
+        searchSongController.page = 0;
+        searchSongController.search();
 
-          easyRefreshController.finishRefresh();
-          easyRefreshController.resetFooter();
-        },
-        onLoad: () async {
-          if (searchSongController.keyword.isEmpty) {
-            ToastUtil.show('请输入关键字');
-            return;
-          }
-          if (!mounted) {
-            return;
-          }
-          searchSongController.page++;
-          await searchSongController.search();
-          easyRefreshController.finishLoad(
-              searchSongController.searchModel.value.list.length % searchSongController.pageSize >= searchSongController.pageSize
-                  ? IndicatorResult.noMore
-                  : IndicatorResult.success);
-        },
-        child: ListView.builder(
+        easyRefreshController.finishRefresh();
+        easyRefreshController.resetFooter();
+      },
+      onLoad: () async {
+        if (searchSongController.keyword.isEmpty) {
+          ToastUtil.show('请输入关键字');
+          return;
+        }
+        if (!mounted) {
+          return;
+        }
+        searchSongController.page++;
+        await searchSongController.search();
+        easyRefreshController.finishLoad(
+            searchSongController.searchMusicModel.value.list.length % searchSongController.pageSize >= searchSongController.pageSize
+                ? IndicatorResult.noMore
+                : IndicatorResult.success);
+      },
+      child: Obx(() {
+        return ListView.builder(
           itemBuilder: (context, index) {
-            SearchItem item = searchSongController.searchModel.value.list.elementAt(index);
-            return buildItem(item);
+            if (searchSongController.searchType.value == SearchSongController.searchTypeSong) {
+              MusicItem item = searchSongController.searchMusicModel.value.list.elementAt(index);
+              return buildMusicItem(item);
+            }
+            MusicListItem item = searchSongController.searchListModel.value.list.elementAt(index);
+            return buildListItem(item);
           },
-          itemCount: searchSongController.searchModel.value.list.length,
-        ),
-      ),
+          itemCount: searchSongController.searchType.value == SearchSongController.searchTypeSong
+              ? searchSongController.searchMusicModel.value.list.length
+              : searchSongController.searchListModel.value.list.length,
+        );
+      }),
     );
   }
 
-  Widget buildItem(SearchItem item) {
+  Widget buildMusicItem(MusicItem item) {
     return Card(
       child: Container(
         alignment: Alignment.center,
         height: 80,
         child: Row(
           children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: 2,
+                  ),
+                  Text(
+                    item.albumName,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Text(item.interval),
+            Builder(builder: (ctx) {
+              return IconButton(
+                onPressed: () {
+                  onTapListItem(ctx, item);
+                },
+                icon: const Icon(Icons.density_medium_outlined, size: 16),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void onTapListItem(BuildContext ctx, MusicItem item) {
+    List menus = [
+      {
+        'name': '播放',
+        'onTap': () {
+          Logger.debug('播放=====$item');
+          String id = item.songmid;
+          String source = item.source;
+          MusicPlayerService.instance.play(source, item);
+        },
+      },
+      {
+        'name': '稍后播放',
+        'onTap': () {
+          Logger.debug('稍后播放=====$item');
+        },
+      },
+      {
+        'name': '添加到...',
+        'onTap': () {
+          Logger.debug('添加到=====$item');
+        },
+      },
+      {
+        'name': '分享歌曲',
+        'onTap': () {
+          Logger.debug('分享歌曲=====$item');
+        },
+      },
+      {
+        'name': '不喜欢',
+        'onTap': () {
+          Logger.debug('不喜欢=====$item');
+        },
+      },
+    ];
+    var child = MenuDialog(menus: menus);
+    final RenderBox box = ctx.findRenderObject() as RenderBox;
+    Offset offset = box.localToGlobal(Offset.zero);
+    double x = offset.dx - child.width / 2;
+    double y = offset.dy + box.size.height / 2;
+    Logger.debug('Get.size:  ${Get.size}  $offset');
+    if (y + child.height > Get.size.height) {
+      y = y - child.height - box.size.height / 2;
+    }
+    DialogUtil.showDialog(child: child, x: x, y: y);
+  }
+
+  Widget buildListItem(MusicListItem item) {
+    return Card(
+      child: Container(
+        alignment: Alignment.center,
+        height: 80,
+        child: Row(
+          children: [
+            Image(
+              image: NetworkImage(item.img),
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+            ),
             Expanded(
                 child: Text(
               item.name,

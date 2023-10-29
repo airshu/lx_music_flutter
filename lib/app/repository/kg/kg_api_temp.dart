@@ -1,11 +1,12 @@
 import 'package:lx_music_flutter/app/app_const.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 
 class KGApiTemp {
-  static Future getMusicUrl(dynamic songInfo, String type) async {
+  static Future getMusicUrl(MusicItem songInfo, String type) async {
     try {
-      String url = 'http://ts.tempmusics.tk/url/kg/${songInfo._types[type].hash}/${type}';
+      String url = 'http://ts.tempmusics.tk/url/kg/${songInfo.qualityMap[type]?['hash']}/${type}';
       var res = await HttpCore.getInstance().get(url, headers: AppConst.headers);
       Logger.debug('KGApiTemp getMusicUrl  $res');
       return {'type': type, 'url': res['data']};

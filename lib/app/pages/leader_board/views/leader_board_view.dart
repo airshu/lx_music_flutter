@@ -4,7 +4,10 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/app/pages/leader_board/controllers/leader_board_controller.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
+import 'package:lx_music_flutter/models/leader_board_model.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/services/music_player_service.dart';
 import 'package:lx_music_flutter/utils/player/music_player.dart';
 
 class LeaderBoardWidget extends BaseStatefulWidget {
@@ -78,7 +81,7 @@ class _LeaderBoardWidgetState extends State<LeaderBoardWidget> {
               itemBuilder: (context, index) {
                 return buildRightItem(index);
               },
-              itemCount: controller.songList.length,
+              itemCount: controller.leaderBoardModel.value.list.length,
             ),
           ),
         ),
@@ -102,31 +105,13 @@ class _LeaderBoardWidgetState extends State<LeaderBoardWidget> {
   }
 
   Widget buildRightItem(int index) {
-    if (controller.songList.length <= index) return Container();
-    final item = controller.songList.elementAt(index);
+    if (controller.leaderBoardModel.value.list.length <= index) return Container();
+    LeaderBoardItem item = controller.leaderBoardModel.value.list.elementAt(index);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () async {
-        String songmid = item['songmid'];
-        for (var t in item['types']) {
-          var result = await KWSongList.getMusicUrlDirect(songmid, t['type']);
-          if (result['url'] != null && result['url'].isNotEmpty) {
-            MusicItem songItem = MusicItem(
-              id: item['songmid'],
-              songName: item['name'],
-              artist: item['singer'],
-              album: item['albumName'],
-              hash: '',
-              artistid: item['songmid'],
-              length: 0,
-              size: 0,
-              url: result['url'],
-            );
-            MusicPlayer().add(songItem);
-            print('$songmid  ${t['type']}=======>>>>>>result=$result');
-          }
-          return;
-        }
+        String source = item.source;
+        MusicPlayerService.instance.play(source, MusicItem.fromLeaderBoardItem(item));
       },
       child: Container(
         height: 26,
@@ -134,12 +119,12 @@ class _LeaderBoardWidgetState extends State<LeaderBoardWidget> {
           children: [
             Expanded(
                 child: Text(
-              '${item['name']}',
+              '${item.name}',
               overflow: TextOverflow.ellipsis,
             )),
             // Text('${item['singer']}'),
             // Text('${item['albumName']}'),
-            Text('${item['interval']}'),
+            Text('${item.interval}'),
           ],
         ),
       ),

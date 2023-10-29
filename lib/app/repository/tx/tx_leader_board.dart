@@ -1,4 +1,9 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/models/leader_board_model.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 
@@ -49,21 +54,20 @@ class TxLeaderBoard {
   static const String periodUrl = 'https://c.y.qq.com/node/pc/wk_v15/top.html';
   static const int limit = 300;
 
-  static Future getList(String bangid, int page) async {
-    var info = periods[int.parse(bangid)];
-    var period = info != null ? info['period'] : getPeriods(bangid);
+  static Future<LeaderBoardModel?> getList(String bangid, int page) async {
+    var info = periods[bangid];
+    var period = info != null ? info['period'] : await getPeriods(bangid);
 
     var res = await listDetailRequest(bangid, period, limit);
-    return {
-      'total': res['toplist']['data']['songInfoList']['length'],
-      'list': filterData(res['toplist']['data']['songInfoList']),
-      'limit': limit,
-      'page': 1,
-      'source': 'tx',
-    };
+    if(res != null && res['toplist']?['data']?['songInfoList'] == null) {
+      return null;
+    }
+    List<LeaderBoardItem> list = filterData(res['toplist']['data']['songInfoList']);
+    return LeaderBoardModel(
+        list: list, total: res['toplist']['data']['songInfoList']['length'], source: AppConst.sourceTX, limit: limit, page: 1);
   }
 
-  static List filterData(List rawList) {
+  static List<LeaderBoardItem> filterData(List rawList) {
     return rawList.map((item) {
       List types = [];
       Map _types = {};
@@ -88,32 +92,47 @@ class TxLeaderBoard {
         _types['flac24bit'] = {'size': size};
       }
 
-      return {
-        'singer': AppUtil.formatSingerName(singers: item['singer'], nameKey: 'name'),
-        'name': item['title'],
-        'albumName': item['album']['name'],
-        'albumId': item['album']['mid'],
-        'source': 'tx',
-        'interval': AppUtil.formatPlayTime(item['interval']),
-        'songId': item['id'],
-        'albumMid': item['album']['mid'],
-        'strMediaMid': item['file']['media_mid'],
-        'songmid': item['mid'],
-        'img': (item['album']['name'] == '' || item['album']['name'] == '空')
+      return LeaderBoardItem(
+        singer: AppUtil.formatSingerName(singers: item['singer'], nameKey: 'name'),
+        name: item['title'],
+        albumName: item['album']['name'],
+        albumId: item['album']['mid'],
+        songmid: item['mid'],
+        source: AppConst.sourceTX,
+        interval: AppUtil.formatPlayTime(item['interval']),
+        img: (item['album']['name'] == '' || item['album']['name'] == '空')
             ? (item['singer']?['length'] != null ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item.singer[0].mid}.jpg' : '')
             : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item.album.mid}.jpg',
-        'lrc': null,
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      };
+        qualityList: types,
+        qualityMap: _types,
+        urlMap: {},
+      );
+      // return {
+      //   'singer': AppUtil.formatSingerName(singers: item['singer'], nameKey: 'name'),
+      //   'name': item['title'],
+      //   'albumName': item['album']['name'],
+      //   'albumId': item['album']['mid'],
+      //   'source': 'tx',
+      //   'interval': AppUtil.formatPlayTime(item['interval']),
+      //   'songId': item['id'],
+      //   'albumMid': item['album']['mid'],
+      //   'strMediaMid': item['file']['media_mid'],
+      //   'songmid': item['mid'],
+      //   'img': (item['album']['name'] == '' || item['album']['name'] == '空')
+      //       ? (item['singer']?['length'] != null ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item.singer[0].mid}.jpg' : '')
+      //       : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item.album.mid}.jpg',
+      //   'lrc': null,
+      //   'otherSource': null,
+      //   'types': types,
+      //   '_types': _types,
+      //   'typeUrl': {},
+      // };
     }).toList();
   }
 
   static RegExp periodList = RegExp(
       r'<i class="play_cover__btn c_tx_link js_icon_play" data-listkey=".+?" data-listname=".+?" data-tid=".+?" data-date=".+?" .+?</i>');
-  static RegExp period = RegExp(r'data-listname="(.+?)" data-tid=".*?\/(.+?)" data-date="(.+?)" .+?</i>');
+  static RegExp period = RegExp(r'data-listname="([^"]+)" data-tid=".*?\/(.+?)" data-date="([^"]+)"');
 
   static Future listDetailRequest(String id, String period, int limit) async {
     String url = 'https://u.y.qq.com/cgi-bin/musicu.fcg';
@@ -137,20 +156,31 @@ class TxLeaderBoard {
         'cv': 1859,
       },
     };
-    HttpCore.getInstance().post(url, headers: headers);
+    Response res = await Dio().post(url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: headers,
+        ),
+        data: body);
+    String jsonStr = const Utf8Decoder().convert(res.data);
+    Map tagMap = json.decode(jsonStr);
+    return tagMap;
   }
 
   static Future getPeriods(String bangid) async {
     var res = await HttpCore.getInstance().get(periodUrl);
-    periodList.allMatches(res['html']).forEach((item) {
-      Iterable<RegExpMatch> allMatches = period.allMatches(item.group(0) ?? '');
-
-      periods[allMatches.elementAt(2)] = {
-        'name': allMatches.elementAt(1),
-        'bangid': allMatches.elementAt(2),
-        'period': allMatches.elementAt(3),
-      };
-    });
+    Iterable<RegExpMatch> it = periodList.allMatches(res);
+    for (var item in it) {
+      String info = item.group(0) ?? '';
+      if (info.isNotEmpty) {
+        Match? match = period.firstMatch(info);
+        periods[match!.group(2)] = {
+          'name': match.group(1),
+          'bangid': match.group(2),
+          'period': match.group(3),
+        };
+      }
+    }
 
     return periods[bangid]['period'];
   }

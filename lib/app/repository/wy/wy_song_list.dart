@@ -2,7 +2,7 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_song_repository.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
@@ -37,9 +37,9 @@ class WYSongList {
 
   static getList() {}
 
-  static Future getListDetail(String id, int page) async {}
+  static Future<MusicModel?> getListDetail(String id, int page) async {}
 
-  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
+  static Future<MusicListModel?> search(String text, [int page = 1, int limit = 10]) async {
     String url = '/api/cloudsearch/pc';
     var data = {
       's': text,
@@ -49,16 +49,16 @@ class WYSongList {
       'offset': limit * (page - 1),
     };
     var res = await WYSongRepository.eapiRequest(url, data);
-    if (res['code'] == 200) {
-      List<SearchListItem> list = filterList(res['result']['playlists']);
-      return SearchListModel(list: list, limit: limit, total: res['result']['playlistCount'], source: AppConst.sourceWY);
+    if (res != null && res['code'] == 200) {
+      List<MusicListItem> list = filterList(res['result']['playlists']);
+      return MusicListModel(list: list, limit: limit, total: res['result']['playlistCount'], source: AppConst.sourceWY);
     }
   }
 
-  static List<SearchListItem> filterList(rawData) {
-    List<SearchListItem> list = [];
+  static List<MusicListItem> filterList(rawData) {
+    List<MusicListItem> list = [];
     for (var item in rawData) {
-      list.add(SearchListItem(
+      list.add(MusicListItem(
         name: item['name'],
         source: AppConst.sourceWY,
         img: item['coverImgUrl'],

@@ -5,29 +5,32 @@ import 'package:lx_music_flutter/app/pages/setting/settings.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_direct.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_temp.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_api_test.dart';
+import 'package:lx_music_flutter/app/repository/kg/kg_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_music_search.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_song_list.dart';
 import 'package:lx_music_flutter/app/repository/kg/kg_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/kw/kw_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_music_search.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/mg/mg_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_music_search.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_song_list.dart';
 import 'package:lx_music_flutter/app/repository/mg/mg_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/tx/tx_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_music_search.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_song_list.dart';
 import 'package:lx_music_flutter/app/repository/tx/tx_tip_search.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_api_direct.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_leader_board.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_music_search.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_song_list.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_tip_search.dart';
+import 'package:lx_music_flutter/models/leader_board_model.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
-import 'package:lx_music_flutter/services/app_service.dart';
-import 'package:lx_music_flutter/utils/encrypt_util.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:lx_music_flutter/utils/md5_util.dart';
@@ -44,14 +47,18 @@ class SongRepository {
       List<MusicItem> list = [];
       result['data'].forEach((element) {
         MusicItem item = MusicItem(
-          id: element['id'] as String? ?? '',
-          songName: element['filename'] as String? ?? '',
-          artist: element['artist'] as String? ?? '',
-          album: element['album'] as String? ?? '',
+          songmid: element['id'] as String? ?? '',
+          name: element['filename'] as String? ?? '',
+          albumName: element['artist'] as String? ?? '',
+          albumId: element['album'] as String? ?? '',
           hash: element['hash'] as String? ?? '',
-          artistid: element['artistid'] as String? ?? '',
-          length: element['timelength'] as int ?? 0,
-          size: element['size'] as int ?? 0,
+          singer: element['artistid'] as String? ?? '',
+          interval: element['timelength'],
+          source: '',
+          img: '',
+          qualityList: [],
+          qualityMap: {},
+          urlMap: {},
         );
         list.add(item);
         // getSongUrl(element['hash']);
@@ -104,7 +111,7 @@ class SongRepository {
   static Future getOtherSource(musicInfo, String source) async {}
 
   /// 搜索歌曲
-  static Future<SearchMusicModel?> searchSongs(String str, String source, [int page = 1, int limit = 10]) async {
+  static Future<MusicModel?> searchSongs(String str, String source, [int page = 1, int limit = 10]) async {
     try {
       return await musicSearchMap[source](str, page, limit);
     } catch (e, s) {
@@ -122,7 +129,7 @@ class SongRepository {
   };
 
   /// 搜索歌单
-  static Future<SearchListModel?> searchSongList(String str, String source, [int page = 1, int limit = 10]) async {
+  static Future<MusicListModel?> searchSongList(String str, String source, [int page = 1, int limit = 10]) async {
     try {
       return await songListSearchMap[source](str, page, limit);
     } catch (e, s) {
@@ -132,21 +139,21 @@ class SongRepository {
   }
 
   static Map musicUrlMap = {
-    AppConst.sourceKG + MusicSource.sourceDirect: KGApiDirect.getMusicUrl,
-    AppConst.sourceKG + MusicSource.sourceTemp: KGApiTemp.getMusicUrl,
-    AppConst.sourceKG + MusicSource.sourceTest: KGApiTest.getMusicUrl,
-    AppConst.sourceKW + MusicSource.sourceDirect: KWApiDirect.getMusicUrl,
-    AppConst.sourceKW + MusicSource.sourceTemp: KWApiDirect.getMusicUrl,
-    AppConst.sourceKW + MusicSource.sourceTest: KWApiDirect.getMusicUrl,
-    AppConst.sourceMG + MusicSource.sourceDirect: MGApiDirect.getMusicUrl,
-    AppConst.sourceMG + MusicSource.sourceTemp: MGApiDirect.getMusicUrl,
-    AppConst.sourceMG + MusicSource.sourceTest: MGApiDirect.getMusicUrl,
-    AppConst.sourceTX + MusicSource.sourceDirect: TXApiDirect.getMusicUrl,
-    AppConst.sourceTX + MusicSource.sourceTemp: TXApiDirect.getMusicUrl,
-    AppConst.sourceTX + MusicSource.sourceTest: TXApiDirect.getMusicUrl,
-    AppConst.sourceWY + MusicSource.sourceDirect: WYApiDirect.getMusicUrl,
-    AppConst.sourceWY + MusicSource.sourceTemp: WYApiDirect.getMusicUrl,
-    AppConst.sourceWY + MusicSource.sourceTest: WYApiDirect.getMusicUrl,
+    AppConst.sourceKG + MusicSource.httpSourceDirect: KGApiDirect.getMusicUrl,
+    AppConst.sourceKG + MusicSource.httpSourceTemp: KGApiTemp.getMusicUrl,
+    AppConst.sourceKG + MusicSource.httpSourceTest: KGApiTest.getMusicUrl,
+    AppConst.sourceKW + MusicSource.httpSourceDirect: KWApiDirect.getMusicUrl,
+    AppConst.sourceKW + MusicSource.httpSourceTemp: KWApiDirect.getMusicUrl,
+    AppConst.sourceKW + MusicSource.httpSourceTest: KWApiDirect.getMusicUrl,
+    AppConst.sourceMG + MusicSource.httpSourceDirect: MGApiDirect.getMusicUrl,
+    AppConst.sourceMG + MusicSource.httpSourceTemp: MGApiDirect.getMusicUrl,
+    AppConst.sourceMG + MusicSource.httpSourceTest: MGApiDirect.getMusicUrl,
+    AppConst.sourceTX + MusicSource.httpSourceDirect: TXApiDirect.getMusicUrl,
+    AppConst.sourceTX + MusicSource.httpSourceTemp: TXApiDirect.getMusicUrl,
+    AppConst.sourceTX + MusicSource.httpSourceTest: TXApiDirect.getMusicUrl,
+    AppConst.sourceWY + MusicSource.httpSourceDirect: WYApiDirect.getMusicUrl,
+    AppConst.sourceWY + MusicSource.httpSourceTemp: WYApiDirect.getMusicUrl,
+    AppConst.sourceWY + MusicSource.httpSourceTest: WYApiDirect.getMusicUrl,
   };
 
   /// 获取歌曲播放地址
@@ -154,12 +161,53 @@ class SongRepository {
   /// [musicSource] 音乐接口来源类型 @see [MusicSource]
   /// [songinfo] 歌曲信息
   /// [type] 音质
-  static Future getMusicUrl(String source, String musicSource, dynamic songInfo, type) async {
+  static Future getMusicUrl(String source, String musicSource, MusicItem songInfo, type) async {
     try {
-      return musicUrlMap[source + musicSource](songInfo, type);
+      return musicUrlMap[source + musicSource]?.call(songInfo, type);
     } catch (e, s) {
       return getOtherSource(songInfo, source);
     }
+  }
+
+  static Map songListMap = {
+    AppConst.sourceKG: KGSongList.getList,
+    AppConst.sourceKW: KWSongList.getList,
+    AppConst.sourceMG: MGSongList.getList,
+    AppConst.sourceTX: TXSongList.getList,
+    AppConst.sourceWY: WYSongList.getList,
+  };
+
+  static Future<MusicListModel?> getList(String source, String? sortId, String? tagId, [int page = 0]) async {
+    try {
+      return songListMap[source]?.call(sortId, tagId, page);
+    } catch (e, s) {
+      Logger.error('$e  $s');
+    }
+  }
+
+  static Map songListDetailMap = {
+    AppConst.sourceKG: KGSongList.getListDetail,
+    AppConst.sourceKW: KWSongList.getListDetail,
+    AppConst.sourceMG: MGSongList.getListDetail,
+    AppConst.sourceTX: TXSongList.getListDetail,
+    AppConst.sourceWY: WYSongList.getListDetail,
+  };
+
+  /// 获取歌单详情
+  static Future<MusicModel?> getListDetail(String source, String id, int page) async {
+    return songListDetailMap[source]?.call(id, page);
+  }
+
+  static Map leaderBoardMap = {
+    AppConst.sourceKG: KGLeaderBoard.getList,
+    AppConst.sourceKW: KWLeaderBoard.getList,
+    AppConst.sourceMG: MGLeaderBoard.getList,
+    AppConst.sourceTX: TxLeaderBoard.getList,
+    AppConst.sourceWY: WYLeaderBoard.getList,
+  };
+
+  static Future<LeaderBoardModel?> getLeaderBoardList(String source, String bangid, int page) async {
+    return await leaderBoardMap[source](bangid, page);
   }
 }
 

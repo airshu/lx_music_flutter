@@ -1,4 +1,6 @@
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
+import 'package:lx_music_flutter/models/leader_board_model.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
@@ -74,17 +76,14 @@ class WYLeaderBoard {
 
   static const int limit = 100000;
 
-  static Future getList(String bangid, int page) async {
+  static Future<LeaderBoardModel?> getList(String bangid, int page) async {
     var resp = await getData(bangid);
-    var musicDetail = await MusiDetailApi.getList(resp['playlist']['trackIds'].map((trackId) => trackId['id']));
-
-    return {
-      'total': musicDetail['list'].length,
-      'list': musicDetail['list'],
-      'limit': limit,
-      'page': page,
-      'source': 'wy',
-    };
+    if(resp != null && resp['playlist']?['trackIds'] != null) {
+      List list = resp['playlist']['trackIds'].map((trackId) => trackId['id']);
+      var musicDetail = await MusiDetailApi.getList(list);
+      List<LeaderBoardItem> itemList = musicDetail['list'];
+      return LeaderBoardModel(list: itemList, total: musicDetail['list'].length, source: AppConst.sourceWY, limit: limit, page: page);
+    }
   }
 }
 

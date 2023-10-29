@@ -1,7 +1,7 @@
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/repository/wy/wy_song_repository.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 
 class WYMusicSearch {
   static Future musicSearch(String str, [int page = 1, int limit = 10]) async {
@@ -18,11 +18,11 @@ class WYMusicSearch {
     return res;
   }
 
-  static List<SearchItem> handleResult(rawData) {
+  static List<MusicItem> handleResult(rawData) {
     if (rawData == null) {
       return [];
     }
-    List<SearchItem> list = [];
+    List<MusicItem> list = [];
     for (var item in rawData) {
       List types = [];
       Map _types = {};
@@ -52,7 +52,7 @@ class WYMusicSearch {
           break;
       }
 
-      list.add(SearchItem(
+      list.add(MusicItem(
         singer: getSinger(item['ar']),
         name: item['name'],
         albumName: item['al']['name'],
@@ -94,11 +94,11 @@ class WYMusicSearch {
     return arr.join('、');
   }
 
-  static Future<SearchMusicModel> search(String str, [int page = 1, int limit = 10]) async {
+  static Future<MusicModel> search(String str, [int page = 1, int limit = 10]) async {
     var res = await musicSearch(str, page, limit);
-    List<SearchItem> list = handleResult(res['result']['songs']);
+    List<MusicItem> list = handleResult(res['result']['songs']);
     int total = res['data']['total'];
     int allPage = (total / limit).ceil();
-    return SearchMusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceWY);
+    return MusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceWY);
   }
 }

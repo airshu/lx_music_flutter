@@ -1,5 +1,4 @@
 import 'package:just_audio/just_audio.dart';
-import 'package:lx_music_flutter/app/sql/music_sql_manager.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:rxdart/rxdart.dart';
@@ -83,7 +82,7 @@ class MusicPlayer {
 
   /// 添加一首歌曲到播放列表
   Future<void> add(MusicItem item) async {
-    String? url = await item.getUrl();
+    String? url = item.lrcUrl;
     if (url == null) {
       return;
     }

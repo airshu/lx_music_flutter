@@ -48,9 +48,9 @@ class KWController extends GetxController {
   }
 
   void openBoard(Board board) async {
-    var result = await KWLeaderBoard.getList(board.bangid, page);
-    Logger.debug('$result');
-    songList.value = result['list'];
+    // var result = await KWLeaderBoard.getList(board.bangid, page);
+    // Logger.debug('$result');
+    // songList.value = result['list'];
   }
 
   void changePlatform(String name) {

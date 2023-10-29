@@ -3,7 +3,7 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'dart:math';
 
 import 'package:lx_music_flutter/app/app_util.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/md5_util.dart';
 
@@ -22,9 +22,9 @@ class MGMusicSearch {
         'https://jadeite.migu.cn/music_search/v3/search/searchAll?isCorrect=1&isCopyright=1&searchSwitch=%7B%22song%22%3A1%2C%22album%22%3A0%2C%22singer%22%3A0%2C%22tagSong%22%3A1%2C%22mvSong%22%3A0%2C%22bestShow%22%3A1%2C%22songlist%22%3A0%2C%22lyricSong%22%3A0%7D&pageSize=${limit}&text=${Uri.encodeComponent(str)}&pageNo=${page}&sort=0';
     var headers = {
       'uiVersion': 'A_music_3.6.1',
-      'deviceId': signData.deviceId,
+      'deviceId': signData['deviceId'],
       'timestamp': time,
-      'sign': signData.sign,
+      'sign': signData['sign'],
       'channel': '0146921',
       'User-Agent':
           'Mozilla/5.0 (Linux; U; Android 11.0.0; zh-cn; MI 11 Build/OPR1.170623.032) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
@@ -38,21 +38,21 @@ class MGMusicSearch {
     var res = await musicSearch(str, page, limit);
     var songResultData = res['songResultData'];
 
-    List<SearchItem> list = filterData(songResultData['resultList']);
+    List<MusicItem> list = filterData(songResultData['resultList']);
 
-    var total = songResultData['totalCount'];
+    int total = int.parse(songResultData['totalCount']);
 
     int allPage = (total / limit).ceil();
 
-    return SearchMusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceMG);
+    return MusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceMG);
   }
 
-  static List<SearchItem> filterData(rawData) {
-    List<SearchItem> list = [];
+  static List<MusicItem> filterData(rawData) {
+    List<MusicItem> list = [];
     Map ids = {};
     for (var item in rawData) {
       for (var data in item) {
-        if (!data['songId'] || !data['copyrightId'] || ids.containsKey(data['copyrightId'])) {
+        if (data['songId'] == null || data['songId'] == '' || data['copyrightId'] == null || data['copyrightId'] == ''|| ids.containsKey(data['copyrightId'])) {
           break;
         }
         ids[data['copyrightId']] = '';
@@ -105,11 +105,11 @@ class MGMusicSearch {
         }
 
         var img = data['img3'] ?? data['img2'] ?? data['img1'];
-        if (img != null && RegExp(r"https?:").hasMatch(data.img3)) {
+        if (img != null && RegExp(r"https?:").hasMatch(data['img3'])) {
           img = 'http://d.musicapp.migu.cn$img';
         }
 
-        list.add(SearchItem(
+        list.add(MusicItem(
           singer: AppUtil.formatSingerName(singers: data['singerList']),
           name: data['name'],
           albumName: data['album'],

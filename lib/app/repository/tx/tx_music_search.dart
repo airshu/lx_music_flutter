@@ -1,8 +1,11 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
-import 'package:lx_music_flutter/utils/http/http_client.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 
+/// 腾讯根据关键字搜索歌曲
 class TXMusicSearch {
   static Future musicSearch(String str, [int page = 1, int limit = 10]) async {
     String url = 'https://u.y.qq.com/cgi-bin/musicu.fcg';
@@ -35,45 +38,53 @@ class TXMusicSearch {
       },
     };
 
-    var res = await HttpCore.getInstance().get(url, headers: headers, data: body);
-    return res['req']['data'];
+    Response res = await Dio().post(url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: headers,
+        ),
+        data: body);
+    String jsonStr = const Utf8Decoder().convert(res.data);
+    Map tagMap = json.decode(jsonStr);
+    return tagMap['req']['data'];
   }
 
-  static List<SearchItem> handleResult(rawData) {
-    List<SearchItem> list = [];
+  static List<MusicItem> handleResult(rawData) {
+    List<MusicItem> list = [];
     for (var item in rawData) {
       List types = [];
       Map _types = {};
       dynamic size;
       var file = item['file'];
       if (file['size_128mp3'] != null) {
-        size = AppUtil.sizeFormate(item['size_128mp3']);
+        size = AppUtil.sizeFormate(file['size_128mp3']);
         types.add({'type': '128k', 'size': size});
         _types['128k'] = {'size': size};
       }
       if (file['size_320mp3'] != null) {
-        size = AppUtil.sizeFormate(item['size_320mp3']);
+        size = AppUtil.sizeFormate(file['size_320mp3']);
         types.add({'type': '320k', 'size': size});
         _types['320k'] = {'size': size};
       }
       if (file['size_flac'] != null) {
-        size = AppUtil.sizeFormate(item['size_flac']);
+        size = AppUtil.sizeFormate(file['size_flac']);
         types.add({'type': 'flac', 'size': size});
         _types['flac'] = {'size': size};
       }
       if (file['size_hires'] != null) {
-        size = AppUtil.sizeFormate(item['size_hires']);
+        size = AppUtil.sizeFormate(file['size_hires']);
         types.add({'type': 'flac24bit', 'size': size});
         _types['flac24bit'] = {'size': size};
       }
 
       String albumId = '';
       String albumName = '';
-      if (item['album']) {
+      if (item['album'] != null) {
         albumId = item['album']['mid'];
         albumName = item['album']['name'];
       }
-      list.add(SearchItem(singer: AppUtil.formatSingerName(singers: item['singer']),
+      list.add(MusicItem(
+        singer: AppUtil.formatSingerName(singers: item['singer']),
         name: item['name'] + item['title_extra'] ?? '',
         albumName: albumName,
         albumId: albumId,
@@ -82,33 +93,13 @@ class TXMusicSearch {
         interval: AppUtil.formatPlayTime(item['interval']),
         img: (albumId == '' || albumId == '空')
             ? item['singer'] != null
-            ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item['singer'][0]['mid']}.jpg'
-            : ''
+                ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item['singer'][0]['mid']}.jpg'
+                : ''
             : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${albumId}.jpg',
         qualityList: types,
         qualityMap: _types,
         urlMap: {},
       ));
-
-      // list.add({
-      //   'singer': AppUtil.formatSingerName(singers: item['singer']),
-      //   'name': item['name'] + item['title_extra'] ?? '',
-      //   'ablumName': albumName,
-      //   'albumId': albumId,
-      //   'source': AppConst.sourceTX,
-      //   'interval': AppUtil.formatPlayTime(item['interval']),
-      //   'songId': item['id'],
-      //   'albumMid': item['album']?['mid'] ?? '',
-      //   'songmid': item['mid'],
-      //   'img': (albumId == '' || albumId == '空')
-      //       ? item['singer'] != null
-      //       ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item['singer'][0]['mid']}.jpg'
-      //       : ''
-      //       : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${albumId}.jpg',
-      //   'types': types,
-      //   '_types': _types,
-      //   'typeUrl': {},
-      // });
     }
 
     return list;
@@ -116,9 +107,9 @@ class TXMusicSearch {
 
   static Future search(String str, [int page = 1, int limit = 10]) async {
     var res = await musicSearch(str, page, limit);
-    List<SearchItem> list = handleResult(res['data']['lists']);
-    int total = res['data']['total'];
+    List<MusicItem> list = handleResult(res['body']['item_song']);
+    int total = res['meta']['estimate_sum'];
     int allPage = (total / limit).ceil();
-    return SearchMusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceTX);
+    return MusicModel(list: list, allPage: allPage, total: total, source: AppConst.sourceTX);
   }
 }

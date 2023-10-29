@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lx_music_flutter/app/sql/music_sql_manager.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/download_manager/dio_download_manager.dart';
 import 'package:lx_music_flutter/utils/download_manager/download_manager.dart';
 import 'package:lx_music_flutter/utils/encrypt_util.dart';
@@ -38,9 +39,9 @@ class AppService extends GetxService {
     // 初始化本地数据
     List<MusicItem> list = await MusicSQLManager().getAllMusicItems();
     for (var item in list) {
-      String? url = await item.getUrl();
-      Logger.debug('init local data: $url');
-      MusicPlayer().playList.add(AudioSource.uri(Uri.parse(url!)));
+      // String? url = await item.getUrl();
+      // Logger.debug('init local data: $url');
+      // MusicPlayer().playList.add(AudioSource.uri(Uri.parse(url!)));
     }
 
     // 初始化播放器

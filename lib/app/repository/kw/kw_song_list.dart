@@ -6,7 +6,7 @@ import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
-import 'package:lx_music_flutter/models/search_model.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/song_list.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
@@ -26,17 +26,17 @@ class KWSongList {
     SortItem(name: '最热', tid: 'hot', id: 'hot'),
   ];
 
-  static Future<SearchListModel?> search(String text, [int page = 1, int limit = 10]) async {
+  static Future<MusicListModel?> search(String text, [int page = 1, int limit = 10]) async {
     String url =
         'http://search.kuwo.cn/r.s?all=${Uri.encodeComponent(text)}&pn=${page - 1}&rn=$limit&rformat=json&encoding=utf8&ver=mbox&vipver=MUSIC_8.7.7.0_BCS37&plat=pc&devid=28156413&ft=playlist&pay=0&needliveshow=0';
 
     var result = await HttpCore.getInstance().get(url);
     result = result.replaceAll(RegExp(r"('(?=(,\s*')))|('(?=:))|((?<=([:,]\s*))')|((?<={)')|('(?=}))"), '"');
     result = json.decode(result);
-    List<SearchListItem> list = [];
+    List<MusicListItem> list = [];
     result['abslist'].forEach((item) {
       Logger.debug('$e');
-      list.add(SearchListItem(
+      list.add(MusicListItem(
         name: AppUtil.decodeName(item['name']),
         source: AppConst.nameKW,
         img: item['pic'],
@@ -49,13 +49,13 @@ class KWSongList {
       ));
     });
 
-    return SearchListModel(list: list, limit: limit, total: int.parse(result['TOTAL']), source: AppConst.nameKW);
+    return MusicListModel(list: list, limit: limit, total: int.parse(result['TOTAL']), source: AppConst.nameKW);
   }
 
   static RegExp mInfo = RegExp(r'level:(\w+),bitrate:(\d+),format:(\w+),size:([\w.]+)');
   static RegExp listDetailLink = RegExp(r'^.+\/playlist(?:_detail)?\/(\d+)(?:\?.*|&.*$|#.*$|$)');
 
-  static Future getListDetail(String id, int page) async {
+  static Future<MusicModel?> getListDetail(String id, int page) async {
     if (RegExp(r'\/bodian\/').hasMatch(id)) {
       return getListDetailMusicListByBD(id, page);
     }
@@ -78,31 +78,32 @@ class KWSongList {
     return getListDetailDigest8(id, page);
   }
 
-  static Future getListDetailDigest5(String id, int page) async {
+  static Future<MusicModel?> getListDetailDigest5(String id, int page) async {
     final detailId = await getListDetailDigest5Info(id, page);
     return getListDetailDigest5Music(detailId, page);
   }
 
-  static Future getListDetailDigest5Music(String id, int page) async {
+  static Future<MusicModel?> getListDetailDigest5Music(String id, int page) async {
     final result = await HttpCore.getInstance().get(
         'http://nplserver.kuwo.cn/pl.svc?op=getlistinfo&pid=$id&pn=${page - 1}&rn=$limit_song&encode=utf-8&keyset=pl2012&identity=kuwo&pcmp4=1');
     if (result['result'] != 'ok') {
       return getListDetail(id, page);
     }
-    return {
-      'list': filterListDetail(result['musiclist']),
-      'page': page,
-      'limit': result['rn'],
-      'total': result['total'],
-      'source': 'kw',
-      'info': DetailInfo(
+
+    return MusicModel(
+      list: filterListDetail(result['musiclist']),
+      page: page,
+      limit: result['rn'],
+      total: result['total'],
+      source: AppConst.sourceKW,
+      info: DetailInfo(
         name: result['title'],
         imgUrl: result['pic'],
         desc: result['info'],
         author: result['uname'],
         playCount: AppUtil.formatPlayCount(result['playnum']),
       ),
-    };
+    );
   }
 
   static Future getListDetailDigest5Info(String id, int page) async {
@@ -115,11 +116,11 @@ class KWSongList {
     return result['child'].length > 0 ? result['child'][0]['sourceid'] : null;
   }
 
-  static Future getAlbumListDetail(
+  static Future<MusicModel> getAlbumListDetail(
     String id,
     int page,
   ) async {
-    List<Map<String, dynamic>> filterListDetail(List<dynamic> rawList, String albumName, String albumId) {
+    List<MusicItem> filterListDetail(List<dynamic> rawList, String albumName, String albumId) {
       return rawList.map((item) {
         List<String> formats = item['formats'].split('|');
         List<Map<String, dynamic>> types = [];
@@ -153,21 +154,37 @@ class KWSongList {
           _types['flac24bit'] = {'size': null};
         }
         // types.reverse()
-        return {
-          'singer': AppUtil.formatSinger(decodeName(item['artist'])),
-          'name': decodeName(item['name']),
-          'albumName': albumName,
-          'albumId': albumId,
-          'songmid': item['id'],
-          'source': 'kw',
-          'interval': null,
-          'img': item['pic'],
-          'lrc': null,
-          'otherSource': null,
-          'types': types,
-          '_types': _types,
-          'typeUrl': {},
-        };
+        return MusicItem(
+          singer: AppUtil.formatSinger(decodeName(item['artist'])),
+          name: decodeName(item['name']),
+          albumName: albumName,
+          albumId: albumId,
+          songmid: item['id'],
+          source: AppConst.sourceKW,
+          interval: '',
+          img: item['pic'],
+          lrc: null,
+          otherSource: null,
+          qualityList: types,
+          qualityMap: _types,
+          urlMap: {},
+        );
+
+        // return {
+        //   'singer': AppUtil.formatSinger(decodeName(item['artist'])),
+        //   'name': decodeName(item['name']),
+        //   'albumName': albumName,
+        //   'albumId': albumId,
+        //   'songmid': item['id'],
+        //   'source': 'kw',
+        //   'interval': null,
+        //   'img': item['pic'],
+        //   'lrc': null,
+        //   'otherSource': null,
+        //   'types': types,
+        //   '_types': _types,
+        //   'typeUrl': {},
+        // };
       }).toList();
     }
 
@@ -181,45 +198,76 @@ class KWSongList {
       return getAlbumListDetail(id, page);
     }
     body['name'] = decodeName(body['name']);
-    return {
-      'list': filterListDetail(body['musiclist'], body['name'], body['albumid']),
-      'page': page,
-      'limit': limit_song,
-      'total': int.parse(body['songnum']),
-      'source': 'kw',
-      'info': DetailInfo(
+    List<MusicItem> _list = filterListDetail(body['musiclist'], body['name'], body['albumid']);
+    return MusicModel(
+      list: _list,
+      page: page,
+      limit: limit_song,
+      total: int.parse(body['songnum']),
+      source: AppConst.sourceKW,
+      info: DetailInfo(
         name: body['name'],
         imgUrl: body['img'] ?? body['hts_img'],
         desc: decodeName(body['info']),
         author: decodeName(body['artist']),
         playCount: AppUtil.formatPlayCount(body['playnum'] ?? '0'),
       ),
-    };
+    );
+    // return {
+    //   'list': filterListDetail(body['musiclist'], body['name'], body['albumid']),
+    //   'page': page,
+    //   'limit': limit_song,
+    //   'total': int.parse(body['songnum']),
+    //   'source': 'kw',
+    //   'info': DetailInfo(
+    //     name: body['name'],
+    //     imgUrl: body['img'] ?? body['hts_img'],
+    //     desc: decodeName(body['info']),
+    //     author: decodeName(body['artist']),
+    //     playCount: AppUtil.formatPlayCount(body['playnum'] ?? '0'),
+    //   ),
+    // };
   }
 
-  static Future getListDetailDigest8(String id, int page) async {
+  static Future<MusicModel?> getListDetailDigest8(String id, int page) async {
     final result = await HttpCore.getInstance().get(getListDetailUrl(id, page));
     if (result['result'] != 'ok') {
       return getListDetail(id, page);
     }
-    return {
-      'list': filterListDetail(result['musiclist']),
-      'page': page,
-      'limit': result['rn'],
-      'total': result['total'],
-      'source': 'kw',
-      'info': DetailInfo(
+    List<MusicItem> list = filterListDetail(result['musiclist']);
+    return MusicModel(
+      list: list,
+      page: page,
+      limit: result['rn'],
+      total: result['total'],
+      source: AppConst.sourceKW,
+      info: DetailInfo(
         name: result['title'],
         imgUrl: result['pic'],
         desc: result['info'],
         author: result['uname'],
         playCount: AppUtil.formatPlayCount(result['playnum']),
       ),
-    };
+    );
+    // return {
+    //   'list': filterListDetail(result['musiclist']),
+    //   'page': page,
+    //   'limit': result['rn'],
+    //   'total': result['total'],
+    //   'source': 'kw',
+    //   'info': DetailInfo(
+    //     name: result['title'],
+    //     imgUrl: result['pic'],
+    //     desc: result['info'],
+    //     author: result['uname'],
+    //     playCount: AppUtil.formatPlayCount(result['playnum']),
+    //   ),
+    // };
   }
 
-  static List<Map<String, dynamic>> filterListDetail(List<dynamic> rawData) {
-    return rawData.map((item) {
+  static List<MusicItem> filterListDetail(List<dynamic> rawData) {
+    List<MusicItem> list = [];
+    for (var item in rawData) {
       List<String> infoArr = item['N_MINFO'].split(';');
       List<Map<String, dynamic>> types = [];
       Map<String, dynamic> _types = {};
@@ -249,22 +297,36 @@ class KWSongList {
       }
       types = types.reversed.toList();
 
-      return {
-        'singer': AppUtil.formatSinger(decodeName(item['artist'])),
-        'name': decodeName(item['name']),
-        'albumName': decodeName(item['album']),
-        'albumId': item['albumid'],
-        'songmid': item['id'],
-        'source': 'kw',
-        'interval': AppUtil.formatPlayTime(int.parse(item['duration'])),
-        'img': null,
-        'lrc': null,
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      };
-    }).toList();
+      list.add(MusicItem(
+        singer: AppUtil.formatSinger(decodeName(item['artist'])),
+        name: decodeName(item['name']),
+        albumName: decodeName(item['album']),
+        albumId: item['albumid'],
+        songmid: item['id'],
+        source: AppConst.nameKG,
+        interval: AppUtil.formatPlayTime(int.parse(item['duration'])),
+        img: '',
+        qualityList: types,
+        qualityMap: _types,
+        urlMap: {},
+      ));
+      // return {
+      //   'singer': AppUtil.formatSinger(decodeName(item['artist'])),
+      //   'name': decodeName(item['name']),
+      //   'albumName': decodeName(item['album']),
+      //   'albumId': item['albumid'],
+      //   'songmid': item['id'],
+      //   'source': 'kw',
+      //   'interval': AppUtil.formatPlayTime(int.parse(item['duration'])),
+      //   'img': null,
+      //   'lrc': null,
+      //   'otherSource': null,
+      //   'types': types,
+      //   '_types': _types,
+      //   'typeUrl': {},
+      // };
+    }
+    return list;
   }
 
   static String decodeName(String? str) {
@@ -284,38 +346,28 @@ class KWSongList {
         '';
   }
 
-  static Future getListDetailMusicListByBD(String id, int page) async {
+  static Future<MusicModel> getListDetailMusicListByBD(String id, int page) async {
     final uid = RegExp(r'uid=(\d+)').firstMatch(id)?.group(1);
     final listId = RegExp(r'playlistId=(\d+)').firstMatch(id)?.group(1);
     final source = RegExp(r'source=(\d+)').firstMatch(id)?.group(1);
     if (listId == null) {
       throw Exception('failed');
     }
-    final tasks = [getListDetailMusicListByBDList(listId, source!, page)];
+    MusicModel model = await getListDetailMusicListByBDList(listId, source!, page);
+    DetailInfo? info;
     switch (source) {
       case '4':
-        tasks.add(getListDetailMusicListByBDListInfo(listId, source));
+        info = await getListDetailMusicListByBDListInfo(listId, source);
         break;
       case '5':
-        tasks.add(getListDetailMusicListByBDUserPub(uid ?? listId));
+        info = await getListDetailMusicListByBDUserPub(uid ?? listId);
         break;
     }
-    final results = await Future.wait(tasks);
-    final listData = results[0];
-    final info = results[1];
-    listData.info = info ??
-        {
-          'name': '',
-          'img': '',
-          'desc': '',
-          'author': '',
-          'play_count': '',
-        };
-    // print(listData);
-    return listData;
+    model.info = info;
+    return model;
   }
 
-  static Future<Map<String, dynamic>?> getListDetailMusicListByBDUserPub(String id) async {
+  static Future<DetailInfo?> getListDetailMusicListByBDUserPub(String id) async {
     final url = 'https://bd-api.kuwo.cn/api/ucenter/users/pub/$id?reqId=${getReqId()}';
     final headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
@@ -330,19 +382,26 @@ class KWSongList {
         return null;
       }
 
-      return {
-        'name': infoData['data']['userInfo']['nickname'] + '喜欢的音乐',
-        'img': infoData['data']['userInfo']['headImg'],
-        'desc': '',
-        'author': infoData['data']['userInfo']['nickname'],
-        'play_count': '',
-      };
+      return DetailInfo(
+        name: infoData['data']['userInfo']['nickname'] + '喜欢的音乐',
+        imgUrl: infoData['data']['userInfo']['headImg'],
+        desc: '',
+        author: infoData['data']['userInfo']['nickname'],
+        playCount: '',
+      );
+      // return {
+      //   'name': infoData['data']['userInfo']['nickname'] + '喜欢的音乐',
+      //   'img': infoData['data']['userInfo']['headImg'],
+      //   'desc': '',
+      //   'author': infoData['data']['userInfo']['nickname'],
+      //   'play_count': '',
+      // };
     } catch (e) {
       return null;
     }
   }
 
-  static Future<Map<String, dynamic>?> getListDetailMusicListByBDListInfo(String id, String source) async {
+  static Future<DetailInfo?> getListDetailMusicListByBDListInfo(String id, String source) async {
     final url = 'https://bd-api.kuwo.cn/api/service/playlist/info/$id?reqId=${getReqId()}&source=$source';
     final headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
@@ -357,13 +416,21 @@ class KWSongList {
         return null;
       }
 
-      return {
-        'name': infoData['data']['name'],
-        'img': infoData['data']['pic'],
-        'desc': infoData['data']['description'],
-        'author': infoData['data']['creatorName'],
-        'play_count': infoData['data']['playNum'],
-      };
+      return DetailInfo(
+        name: infoData['data']['name'],
+        imgUrl: infoData['data']['pic'],
+        desc: infoData['data']['description'],
+        author: infoData['data']['creatorName'],
+        playCount: infoData['data']['playNum'],
+      );
+
+      // return {
+      //   'name': infoData['data']['name'],
+      //   'img': infoData['data']['pic'],
+      //   'desc': infoData['data']['description'],
+      //   'author': infoData['data']['creatorName'],
+      //   'play_count': infoData['data']['playNum'],
+      // };
     } catch (e) {
       return null;
     }
@@ -377,7 +444,7 @@ class KWSongList {
     return t() + t() + t() + t() + t() + t() + t() + t();
   }
 
-  static Future getListDetailMusicListByBDList(String id, String source, int page, {int tryNum = 0}) async {
+  static Future<MusicModel> getListDetailMusicListByBDList(String id, String source, int page, {int tryNum = 0}) async {
     final url = 'https://bd-api.kuwo.cn/api/service/playlist/$id/musicList?reqId=${getReqId()}&source=$source&pn=$page&rn=${limit_song}';
     final headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
@@ -392,13 +459,21 @@ class KWSongList {
         throw Exception('failed');
       }
 
-      return {
-        'list': filterBDListDetail(listData['data']['list']),
-        'page': page,
-        'limit': listData['data']['pageSize'],
-        'total': listData['data']['total'],
-        'source': 'kw',
-      };
+      List<MusicItem> list = filterBDListDetail(listData['data']['list']);
+      return MusicModel(
+        list: list,
+        total: listData['data']['total'],
+        source: AppConst.sourceKW,
+        limit: listData['data']['pageSize'],
+        page: page,
+      );
+      // return {
+      //   'list': filterBDListDetail(listData['data']['list']),
+      //   'page': page,
+      //   'limit': listData['data']['pageSize'],
+      //   'total': listData['data']['total'],
+      //   'source': 'kw',
+      // };
     } catch (e) {
       if (tryNum > 2) {
         throw Exception('try max num');
@@ -407,7 +482,7 @@ class KWSongList {
     }
   }
 
-  static List<Map<String, dynamic>> filterBDListDetail(List<dynamic> rawList) {
+  static List<MusicItem> filterBDListDetail(List<dynamic> rawList) {
     return rawList.map((item) {
       List<Map<String, dynamic>> types = [];
       Map<String, dynamic> _types = {};
@@ -435,22 +510,35 @@ class KWSongList {
       }
       types = types.reversed.toList();
 
-      return {
-        'singer': item['artists'].map((s) => s['name']).join('、'),
-        'name': item['name'],
-        'albumName': item['album'],
-        'albumId': item['albumId'],
-        'songmid': item['id'],
-        'source': 'kw',
-        'interval': AppUtil.formatPlayTime(item['duration']),
-        'img': item['albumPic'],
-        'releaseDate': item['releaseDate'],
-        'lrc': null,
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      };
+      return MusicItem(
+        singer: item['artists'].map((s) => s['name']).join('、'),
+        name: item['name'],
+        albumName: item['album'],
+        albumId: item['albumId'],
+        songmid: item['id'],
+        source: AppConst.sourceKW,
+        interval: AppUtil.formatPlayTime(item['duration']),
+        img: item['albumPic'],
+        qualityList: types,
+        qualityMap: _types,
+        urlMap: {},
+      );
+      // return {
+      //   'singer': item['artists'].map((s) => s['name']).join('、'),
+      //   'name': item['name'],
+      //   'albumName': item['album'],
+      //   'albumId': item['albumId'],
+      //   'songmid': item['id'],
+      //   'source': 'kw',
+      //   'interval': AppUtil.formatPlayTime(item['duration']),
+      //   'img': item['albumPic'],
+      //   'releaseDate': item['releaseDate'],
+      //   'lrc': null,
+      //   'otherSource': null,
+      //   'types': types,
+      //   '_types': _types,
+      //   'typeUrl': {},
+      // };
     }).toList();
   }
 
@@ -656,7 +744,7 @@ class KWSongList {
     return compressed;
   }
 
-  static Future getList([String? sortId, String? tagId, int page = 0]) async {
+  static Future<MusicListModel?> getList([String? sortId, String? tagId, int page = 0]) async {
     dynamic id;
     dynamic type;
     if (tagId != null) {
@@ -675,22 +763,26 @@ class KWSongList {
         res = res.data;
       }
       if (id == null || type == '10000') {
-        return {
-          'list': filterList(res['data']['data']),
-          'total': res['data']['total'],
-          'page': res['data']['pn'],
-          'limit': res['data']['rn'],
-          'source': 'kw',
-        };
+        List<MusicListItem> list = filterList(res['data']['data']);
+        return MusicListModel(list: list, limit: res['data']['rn'], total: res['data']['total'], source: AppConst.sourceKW);
+        // {
+        //   'list': filterList(res['data']['data']),
+        //   'total': res['data']['total'],
+        //   'page': res['data']['pn'],
+        //   'limit': res['data']['rn'],
+        //   'source': 'kw',
+        // };
       }
 
-      return {
-        'list': filterList2(res),
-        'total': 1000,
-        'page': page,
-        'limit': 1000,
-        'source': 'kw',
-      };
+      List<MusicListItem> list = filterList2(res);
+      return MusicListModel(list: list, limit: 1000, total: 1000, source: AppConst.sourceKW);
+      // return {
+      //   'list': filterList2(res),
+      //   'total': 1000,
+      //   'page': page,
+      //   'limit': 1000,
+      //   'source': 'kw',
+      // };
     } catch (e, s) {
       Logger.error('kw getList  $e  $s');
     }
@@ -708,40 +800,60 @@ class KWSongList {
     }
   }
 
-  static filterList(List rawData) {
-    List list = [];
+  static List<MusicListItem> filterList(List rawData) {
+    List<MusicListItem> list = [];
     for (var item in rawData) {
-      list.add({
-        'play_count': AppUtil.formatPlayCount(int.parse(item['listencnt'] ?? '0')),
-        'id': 'digest-${item['digest']}__${item['id']}',
-        'author': item['uname'],
-        'name': item['name'],
-        'total': item['total'],
-        'img': item['img'],
-        'grade': double.parse(item['favorcnt']) / 10,
-        'desc': item['desc'],
-        'source': 'kw',
-      });
+      list.add(MusicListItem(
+        name: item['name'],
+        source: AppConst.sourceKW,
+        img: item['img'],
+        playCount: AppUtil.formatPlayCount(int.parse(item['listencnt'] ?? '0')),
+        id: 'digest-${item['digest']}__${item['id']}',
+        author: item['uname'],
+        total: item['total'],
+      ));
+      // list.add({
+      //   'play_count': AppUtil.formatPlayCount(int.parse(item['listencnt'] ?? '0')),
+      //   'id': 'digest-${item['digest']}__${item['id']}',
+      //   'author': item['uname'],
+      //   'name': item['name'],
+      //   'total': item['total'],
+      //   'img': item['img'],
+      //   'grade': double.parse(item['favorcnt']) / 10,
+      //   'desc': item['desc'],
+      //   'source': 'kw',
+      // });
     }
     return list;
   }
 
-  static filterList2(rawData) {
-    List list = [];
+  static List<MusicListItem> filterList2(rawData) {
+    List<MusicListItem> list = [];
     for (var data in rawData) {
       if (data['label'] == null) continue;
       for (var item in data['list']) {
-        list.add({
-          'play_count': AppUtil.formatPlayCount(item['listencnt'] ?? 0),
-          'id': 'digest-${item['digest']}__${item['id']}',
-          'author': item['uname'],
-          'name': item['name'],
-          'total': item['total'],
-          'img': item['img'],
-          'grade': (double.parse(item['favorcnt'] ?? '1.0')) / 10,
-          'desc': item['desc'],
-          'source': 'kw',
-        });
+        list.add(MusicListItem(
+          name: item['name'],
+          source: AppConst.sourceKW,
+          img: item['img'],
+          playCount: AppUtil.formatPlayCount(item['listencnt'] ?? 0),
+          id: 'digest-${item['digest']}__${item['id']}',
+          author: item['uname'] ?? '',
+          total: item['total'],
+          grade: '${(double.parse(item['favorcnt'] ?? '1.0')) / 10}',
+          desc: item['desc'],
+        ));
+        // list.add({
+        //   'play_count': AppUtil.formatPlayCount(item['listencnt'] ?? 0),
+        //   'id': 'digest-${item['digest']}__${item['id']}',
+        //   'author': item['uname'],
+        //   'name': item['name'],
+        //   'total': item['total'],
+        //   'img': item['img'],
+        //   'grade': (double.parse(item['favorcnt'] ?? '1.0')) / 10,
+        //   'desc': item['desc'],
+        //   'source': 'kw',
+        // });
       }
     }
     return list;

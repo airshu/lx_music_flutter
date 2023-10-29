@@ -5,6 +5,7 @@ import 'package:lx_music_flutter/app/pages/setting/settings.dart';
 import 'package:lx_music_flutter/app/repository/song_repository.dart';
 import 'package:lx_music_flutter/app/sql/music_sql_manager.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/download_manager/download_manager.dart';
 import 'package:lx_music_flutter/utils/overlay_dragger.dart';
 import 'package:lx_music_flutter/utils/player/music_player.dart';
@@ -15,7 +16,6 @@ class MusicPlayerService extends GetxService {
   static MusicPlayerService get instance => Get.find();
 
   MusicPlayerComponent musicPlayerComponent = const MusicPlayerComponent();
-
 
   /// 喜爱的播放列表
   List loveMusicList = [];
@@ -30,32 +30,26 @@ class MusicPlayerService extends GetxService {
     //todo 读取数据库获取播放列表数据
   }
 
-
   /// 播放音乐
-  Future<void> play(String source, dynamic songinfo) async {
-    List types = songinfo['types'];
-    for(var item in types) {
+  Future<void> play(String source, MusicItem songinfo) async {
+    List types = songinfo.qualityList;
+    for (var item in types) {
       String type = item['type'];
 
-      Map urlInfo = await SongRepository.getMusicUrl(source, MusicSource.sourceTest, songinfo, type);
-      if(urlInfo['url'] == null || urlInfo['url'] == '') {
-        urlInfo = await SongRepository.getMusicUrl(source, MusicSource.sourceTemp, songinfo, type);
-      }
-      if(urlInfo['url'] == null || urlInfo['url'] == '') {
-        urlInfo = await SongRepository.getMusicUrl(source, MusicSource.sourceDirect, songinfo, type);
-      }
-      if(urlInfo['url'] != null) {
-        songinfo['typeUrl'][type] = urlInfo['url'];
-        MusicPlayer().addSongInfo(urlInfo['url'], songinfo);
-        return;
+      for (var httpSource in MusicSource.httpSourceList) {
+        Map urlInfo = await SongRepository.getMusicUrl(source, httpSource, songinfo, type);
+        if (urlInfo['url'] != null && urlInfo['url'] != '') {
+          songinfo.urlMap[type] = urlInfo['url'];
+          MusicPlayer().addSongInfo(urlInfo['url'], songinfo);
+          return;
+        }
       }
     }
+    ToastUtil.show('无法获取歌曲地址');
   }
 
   /// 播放音乐列表
-  void playList(dynamic list) {
-
-  }
+  void playList(dynamic list) {}
 
   /// 显示播放小组件
   void show() {
@@ -72,16 +66,16 @@ class MusicPlayerService extends GetxService {
   }
 
   void download(MusicItem item) async {
-    String? url = await item.getUrl();
-    if(url == null) {
-      ToastUtil.show('无法获取下载地址');
-      return;
-    }
-    String path = '';
-    String fileName = '${item.hash}.mp3';
-    DownloadManager.instance.download(url, path, fileName).then((value) {
-      ToastUtil.show('下载完成： $value');
-    });
-    MusicSQLManager().insert(item);
+    // String? url = await item.getUrl();
+    // if(url == null) {
+    //   ToastUtil.show('无法获取下载地址');
+    //   return;
+    // }
+    // String path = '';
+    // String fileName = '${item.hash}.mp3';
+    // DownloadManager.instance.download(url, path, fileName).then((value) {
+    //   ToastUtil.show('下载完成： $value');
+    // });
+    // MusicSQLManager().insert(item);
   }
 }

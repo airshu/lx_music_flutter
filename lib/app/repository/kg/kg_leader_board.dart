@@ -1,4 +1,6 @@
+import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
+import 'package:lx_music_flutter/models/leader_board_model.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
 
@@ -92,22 +94,29 @@ class KGLeaderBoard {
     return arr.join('`');
   }
 
-  static Future getList(String bangid, int page) async {
+  static Future<LeaderBoardModel?> getList(String bangid, int page) async {
     String url = getUrl(page, bangid, listDetailLimit);
     var result = await HttpCore.getInstance().get(url);
     var total = result['data']['total'];
     int limit = 100;
-    List list = filterData(result['data']['info']);
-    return {
-      'total': total,
-      'list': list,
-      'page': page,
-      'source': 'kg',
-      'limit': limit,
-    };
+    List<LeaderBoardItem> list = filterData(result['data']['info']);
+    return LeaderBoardModel(
+      list: list,
+      total: total,
+      source: AppConst.sourceKG,
+      page: page,
+      limit: limit,
+    );
+    // return {
+    //   'total': total,
+    //   'list': list,
+    //   'page': page,
+    //   'source': 'kg',
+    //   'limit': limit,
+    // };
   }
 
-  static List filterData(List<dynamic> rawList) {
+  static List<LeaderBoardItem> filterData(List<dynamic> rawList) {
     return rawList.map((item) {
       List types = [];
       Map _types = {};
@@ -131,22 +140,35 @@ class KGLeaderBoard {
         types.add({'type': 'flac24bit', 'size': size});
         _types['flac24bit'] = {'size': size, 'hash': item['sqhash']};
       }
-      return {
-        'singer': AppUtil.formatSingerName(singers: item['authors'], nameKey: 'author_name'),
-        'name': AppUtil.decodeName(item['songname']),
-        'albumName': AppUtil.decodeName(item['remark']),
-        'albumId': item['album_id'],
-        'songmid': item['audio_id'],
-        'source': 'kg',
-        'interval': AppUtil.formatPlayTime(item['duration']),
-        'img': null,
-        'lrc': null,
-        'hash': item['hash'],
-        'otherSource': null,
-        'types': types,
-        '_types': _types,
-        'typeUrl': {},
-      };
+      return LeaderBoardItem(
+        singer: AppUtil.formatSingerName(singers: item['authors'], nameKey: 'author_name'),
+        name: AppUtil.decodeName(item['songname']),
+        albumName: AppUtil.decodeName(item['remark']),
+        albumId: item['album_id'],
+        songmid: item['audio_id'].toString(),
+        source: AppConst.sourceKG,
+        interval: AppUtil.formatPlayTime(item['duration']),
+        img: '',
+        qualityList: types,
+        qualityMap: _types,
+        urlMap: {},
+      );
+      // return {
+      //   'singer': AppUtil.formatSingerName(singers: item['authors'], nameKey: 'author_name'),
+      //   'name': AppUtil.decodeName(item['songname']),
+      //   'albumName': AppUtil.decodeName(item['remark']),
+      //   'albumId': item['album_id'],
+      //   'songmid': item['audio_id'],
+      //   'source': 'kg',
+      //   'interval': AppUtil.formatPlayTime(item['duration']),
+      //   'img': null,
+      //   'lrc': null,
+      //   'hash': item['hash'],
+      //   'otherSource': null,
+      //   'types': types,
+      //   '_types': _types,
+      //   'typeUrl': {},
+      // };
     }).toList();
   }
 }
