@@ -59,12 +59,12 @@ class TxLeaderBoard {
     var period = info != null ? info['period'] : await getPeriods(bangid);
 
     var res = await listDetailRequest(bangid, period, limit);
-    if(res != null && res['toplist']?['data']?['songInfoList'] == null) {
+    if (res != null && res['toplist']?['data']?['songInfoList'] == null) {
       return null;
     }
     List<LeaderBoardItem> list = filterData(res['toplist']['data']['songInfoList']);
     return LeaderBoardModel(
-        list: list, total: res['toplist']['data']['songInfoList']['length'], source: AppConst.sourceTX, limit: limit, page: 1);
+        list: list, total: (res['toplist']['data']['songInfoList'] as List).length, source: AppConst.sourceTX, limit: limit, page: 1);
   }
 
   static List<LeaderBoardItem> filterData(List rawList) {
@@ -101,32 +101,12 @@ class TxLeaderBoard {
         source: AppConst.sourceTX,
         interval: AppUtil.formatPlayTime(item['interval']),
         img: (item['album']['name'] == '' || item['album']['name'] == '空')
-            ? (item['singer']?['length'] != null ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item.singer[0].mid}.jpg' : '')
-            : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item.album.mid}.jpg',
+            ? (item['singer']?['length'] != null ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item.singer[0]['mid']}.jpg' : '')
+            : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item['album']['mid']}.jpg',
         qualityList: types,
         qualityMap: _types,
         urlMap: {},
       );
-      // return {
-      //   'singer': AppUtil.formatSingerName(singers: item['singer'], nameKey: 'name'),
-      //   'name': item['title'],
-      //   'albumName': item['album']['name'],
-      //   'albumId': item['album']['mid'],
-      //   'source': 'tx',
-      //   'interval': AppUtil.formatPlayTime(item['interval']),
-      //   'songId': item['id'],
-      //   'albumMid': item['album']['mid'],
-      //   'strMediaMid': item['file']['media_mid'],
-      //   'songmid': item['mid'],
-      //   'img': (item['album']['name'] == '' || item['album']['name'] == '空')
-      //       ? (item['singer']?['length'] != null ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item.singer[0].mid}.jpg' : '')
-      //       : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item.album.mid}.jpg',
-      //   'lrc': null,
-      //   'otherSource': null,
-      //   'types': types,
-      //   '_types': _types,
-      //   'typeUrl': {},
-      // };
     }).toList();
   }
 
@@ -144,7 +124,7 @@ class TxLeaderBoard {
         'module': 'musicToplist.ToplistInfoServer',
         'method': 'GetDetail',
         'param': {
-          'topid': id,
+          'topid': int.parse(id),
           'num': limit,
           'period': period,
         },
@@ -159,9 +139,10 @@ class TxLeaderBoard {
     Response res = await Dio().post(url,
         options: Options(
           responseType: ResponseType.bytes,
+          contentType: Headers.jsonContentType,
           headers: headers,
         ),
-        data: body);
+        data: jsonEncode(body));
     String jsonStr = const Utf8Decoder().convert(res.data);
     Map tagMap = json.decode(jsonStr);
     return tagMap;

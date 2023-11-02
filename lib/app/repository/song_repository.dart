@@ -94,7 +94,7 @@ class SongRepository {
   };
 
   /// 根据关键字搜索热门词，方便用户快速选择
-  /// [keyword]
+  /// [keyword] 关键字
   /// [source]
   static Future tipSearch(String keyword, String source) async {
     return await tipSearchMap[source](keyword);
@@ -111,6 +111,7 @@ class SongRepository {
   static Future getOtherSource(musicInfo, String source) async {}
 
   /// 搜索歌曲
+  /// [str] 歌曲关键字
   static Future<MusicModel?> searchSongs(String str, String source, [int page = 1, int limit = 10]) async {
     try {
       return await musicSearchMap[source](str, page, limit);
@@ -129,6 +130,7 @@ class SongRepository {
   };
 
   /// 搜索歌单
+  /// [str] 关键字
   static Future<MusicListModel?> searchSongList(String str, String source, [int page = 1, int limit = 10]) async {
     try {
       return await songListSearchMap[source](str, page, limit);
@@ -177,6 +179,9 @@ class SongRepository {
     AppConst.sourceWY: WYSongList.getList,
   };
 
+  /// 获取歌单列表
+  /// [sortId] 分类ID
+  /// [tagId] 标签ID
   static Future<MusicListModel?> getList(String source, String? sortId, String? tagId, [int page = 0]) async {
     try {
       return songListMap[source]?.call(sortId, tagId, page);
@@ -194,6 +199,7 @@ class SongRepository {
   };
 
   /// 获取歌单详情
+  /// [id] 歌单ID
   static Future<MusicModel?> getListDetail(String source, String id, int page) async {
     return songListDetailMap[source]?.call(id, page);
   }
@@ -206,8 +212,23 @@ class SongRepository {
     AppConst.sourceWY: WYLeaderBoard.getList,
   };
 
+  /// 获取榜单列表
+  /// [bangid] 榜单ID
   static Future<LeaderBoardModel?> getLeaderBoardList(String source, String bangid, int page) async {
     return await leaderBoardMap[source](bangid, page);
+  }
+
+  static Map tagsMap = {
+    AppConst.sourceKG: KGSongList.getTags,
+    AppConst.sourceKW: KWSongList.getTags,
+    AppConst.sourceMG: MGSongList.getTags,
+    AppConst.sourceTX: TXSongList.getTags,
+    AppConst.sourceWY: WYSongList.getTags,
+  };
+
+  /// 获取不同平台歌单标签
+  static Future getTags(String source) async {
+    return tagsMap[source]?.call();
   }
 }
 

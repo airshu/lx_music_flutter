@@ -65,25 +65,9 @@ class SongListController extends GetxController {
     Logger.debug('changePlatform  $name');
     currentPlatform.value = name;
     sortList.value = AppConst.sortListMap[name]!;
+    musicListModel.value.reset();
 
-    var res;
-    switch (name) {
-      case AppConst.nameWY:
-        res = await WYSongList.getTags();//todo
-        break;
-      case AppConst.nameMG:
-        res = await MGSongList.getTags();
-        break;
-      case AppConst.nameKW:
-        res = await KWSongList.getTags();
-        break;
-      case AppConst.nameKG:
-        res = await KGSongList.getTags();
-        break;
-      case AppConst.nameTX:
-        res = await TXSongList.getTags();
-        break;
-    }
+    var res = await SongRepository.getTags(AppConst.sourceMap[name]!);
     for(var item in res['hotTags']) {
       Logger.debug('hotTags  $item');
     }
@@ -104,7 +88,13 @@ class SongListController extends GetxController {
     String sortId = sortList.where((item) => item.isSelect).first.id;
     String tagId = item['id'].toString();
     MusicListModel? model = await SongRepository.getList(AppConst.sourceMap[currentPlatform.value]!, sortId.toString(), tagId, page);
-    musicListModel.value = model ?? MusicListModel.empty();
+
+    musicListModel.value.list.addAll(model?.list ?? []);
+    musicListModel.value.limit = model?.limit ?? 0;
+    musicListModel.value.total = model?.total ?? 0;
+    musicListModel.value.source = model?.source ?? '';
+    musicListModel.value.page = model?.page;
+    musicListModel.refresh();
     currentTag.value = item;
   }
 

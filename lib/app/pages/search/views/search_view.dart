@@ -230,6 +230,7 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
   }
 
   Widget buildListItem(MusicListItem item) {
+    Logger.debug('----$item');
     return Card(
       child: Container(
         alignment: Alignment.center,

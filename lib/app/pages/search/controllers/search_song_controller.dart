@@ -44,7 +44,6 @@ class SearchSongController extends GetxController {
     } else if (searchType.value == searchTypeList) {
       MusicListModel? model = await SongRepository.searchSongList(keyword, AppConst.sourceMap[currentPlatform.value]!, page);
       if (model != null) {
-        searchListModel.value.limit = model.limit;
         searchListModel.value.total = model.total;
         searchListModel.value.source = model.source;
         searchListModel.value.list.addAll(model.list);
@@ -56,17 +55,8 @@ class SearchSongController extends GetxController {
   /// 切换平台重新请求搜索结果
   void changePlatform(String name) {
     currentPlatform.value = name;
-    switch (name) {
-      case AppConst.nameKW:
-        break;
-      case AppConst.nameKG:
-        break;
-      case AppConst.nameWY:
-        break;
-      case AppConst.nameMG:
-        break;
-      case AppConst.nameTX:
-        break;
-    }
+    searchListModel.value.reset();
+    searchMusicModel.value.reset();
+    search();
   }
 }

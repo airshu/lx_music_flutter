@@ -52,6 +52,15 @@ class MusicModel {
   Map<String, dynamic> toJson() => _$MusicModelToJson(this);
 
   factory MusicModel.empty() => MusicModel(list: [], total: 0, source: '');
+
+  void reset() {
+    list.clear();
+    total = 0;
+    source = '';
+    page = 0;
+    limit = 0;
+    info = null;
+  }
 }
 
 @JsonSerializable()
@@ -196,6 +205,14 @@ class MusicListModel {
   factory MusicListModel.fromJson(Map<String, dynamic> json) => _$MusicListModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$MusicListModelToJson(this);
+
+  void reset() {
+    list.clear();
+    limit = 0;
+    total = 0;
+    source = '';
+    page = 0;
+  }
 }
 
 @JsonSerializable()
@@ -251,4 +268,9 @@ class MusicListItem {
   factory MusicListItem.fromJson(Map<String, dynamic> json) => _$MusicListItemFromJson(json);
 
   Map<String, dynamic> toJson() => _$MusicListItemToJson(this);
+
+  @override
+  String toString() {
+    return 'MusicListItem{name: $name, source: $source, img: $img, playCount: $playCount, id: $id, author: $author, time: $time, grade: $grade, total: $total, desc: $desc}';
+  }
 }

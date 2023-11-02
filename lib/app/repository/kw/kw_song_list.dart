@@ -38,7 +38,7 @@ class KWSongList {
       Logger.debug('$e');
       list.add(MusicListItem(
         name: AppUtil.decodeName(item['name']),
-        source: AppConst.nameKW,
+        source: AppConst.sourceKW,
         img: item['pic'],
         playCount: AppUtil.formatPlayCount(item['playcnt']),
         id: item['playlistid'],
@@ -49,7 +49,7 @@ class KWSongList {
       ));
     });
 
-    return MusicListModel(list: list, limit: limit, total: int.parse(result['TOTAL']), source: AppConst.nameKW);
+    return MusicListModel(list: list, limit: limit, total: int.parse(result['TOTAL']), source: AppConst.sourceKW);
   }
 
   static RegExp mInfo = RegExp(r'level:(\w+),bitrate:(\d+),format:(\w+),size:([\w.]+)');

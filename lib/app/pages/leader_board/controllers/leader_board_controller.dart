@@ -24,7 +24,6 @@ class LeaderBoardController extends GetxController {
 
   /// 打开某个排行榜榜单
   void openBoard(Board board) async {
-    print('======');
     LeaderBoardModel? model = await SongRepository.getLeaderBoardList(AppConst.sourceMap[currentPlatform.value]!, board.bangid, page);
     leaderBoardModel.value = model ?? LeaderBoardModel.empty();
   }
