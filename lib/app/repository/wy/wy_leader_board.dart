@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/models/leader_board_model.dart';
@@ -64,13 +65,16 @@ class WYLeaderBoard {
 
   static Future getBoardsData() async {
     String url = 'https://music.163.com/weapi/toplist';
-    var result = await HttpCore.getInstance().post(url, data: CryptoUtils.weapi({}));
+    var param = await CryptoUtils.weapi({});
+    var result = await HttpCore.getInstance().post(url, options: Options(extra: {'form': param}));
     return result;
   }
 
   static Future getData(String id) async {
     String url = 'https://music.163.com/weapi/v3/playlist/detail';
-    var result = await HttpCore.getInstance().post(url, data: CryptoUtils.weapi({'id': id, 'n': 100000, 'p': 1}), getResponse: true);
+    var param = await CryptoUtils.weapi({'id': id, 'n': 100000, 'p': 1});
+    var options = Options(extra: {'form': param});
+    var result = await HttpCore.getInstance().post(url, options: options, getResponse: true);
     return result;
   }
 
@@ -78,11 +82,12 @@ class WYLeaderBoard {
 
   static Future<LeaderBoardModel?> getList(String bangid, int page) async {
     var resp = await getData(bangid);
-    if(resp != null && resp['playlist']?['trackIds'] != null) {
+    if (resp != null && resp['playlist']?['trackIds'] != null) {
       List list = resp['playlist']['trackIds'].map((trackId) => trackId['id']);
       var musicDetail = await MusiDetailApi.getList(list);
       List<LeaderBoardItem> itemList = musicDetail['list'];
-      return LeaderBoardModel(list: itemList, total: musicDetail['list'].length, source: AppConst.sourceWY, limit: limit, page: page);
+      return LeaderBoardModel(
+          list: itemList, total: musicDetail['list'].length, source: AppConst.sourceWY, limit: limit, page: page);
     }
   }
 }
@@ -91,13 +96,16 @@ class MusiDetailApi {
   static Future getList(List ids) async {
     String url = 'https://music.163.com/weapi/v3/song/detail';
     Map<String, dynamic> headers = {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
+      'User-Agent':
+          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
       'origin': 'https://music.163.com',
     };
-    var res = await HttpCore.getInstance().post(url, headers: headers, data: CryptoUtils.weapi({
+    var param = await CryptoUtils.weapi({
       'c': '[${ids.map((id) => '{"id":$id}').join(',')}]',
       'ids': '[${ids.join(',')}]',
-    }));
+    });
+    var options = Options(extra: {'form': param});
+    var res = await HttpCore.getInstance().post(url, headers: headers, options: options);
     return res;
   }
 }

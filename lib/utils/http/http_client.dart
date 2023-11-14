@@ -48,15 +48,15 @@ class HttpCore extends BaseHttp {
   ///
   /// [url] 网络文件url
   /// [savePath] 保存地址
-  Future<Response> download(String url, String savePath) async {
+  Future<Response> download(String url, String savePath, {Options? options}) async {
     var response = await dio.download(
       url,
       savePath,
-      onReceiveProgress: (received, total) {},
+      onReceiveProgress: (received, total) {
+        Logger.debug('onReceiveProgress  received=$received  total=$total');
+      },
+      options: options,
     );
-
     return response;
   }
-
-
 }

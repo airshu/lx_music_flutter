@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
@@ -12,18 +13,63 @@ class WYSongList {
     SortItem(name: '最热', tid: 'hot', id: 'hot', isSelect: true),
   ];
 
+  static const int limit_list = 30;
+
   static Future getTag() async {
     String url = 'https://music.163.com/weapi/playlist/catalogue';
 
-    var result = await HttpCore.getInstance().post(url, data: CryptoUtils.weapi({}));
+    var param = await CryptoUtils.weapi({});
+    var options = Options(extra: {'form': param});
+    var result = await HttpCore.getInstance().post(url, options: options);
     Logger.debug('$result');
+    if(result != null && result['code'] == 200) {
+      Map subList = {};
+      Map categories = result['categories'];
+      for(var item in result['sub']) {
+        String key = item['category'].toString();
+        if(!subList.containsKey(key)) {
+          subList[key] = [];
+        }
+        (subList[key] as List).add({
+          'parent_id': categories[key],
+          'parent_name': categories[key],
+          'id': item['name'],
+          'name': item['name'],
+          'source': AppConst.sourceWY,
+        });
+      }
+
+      List list = [];
+      for(var key in categories.keys) {
+        list.add({
+          'name': categories[key],
+          'list': subList[key],
+          'source': AppConst.sourceWY,
+        });
+      }
+      return list;
+    }
   }
 
   static Future getHotTag() async {
     String url = 'https://music.163.com/weapi/playlist/hottags';
-
-    var result = await HttpCore.getInstance().post(url, data: CryptoUtils.weapi({}));
+    var param = await CryptoUtils.weapi({});
+    var options = Options(extra: {'form': param});
+    var result = await HttpCore.getInstance().post(url, options: options);
     Logger.debug('$result');
+    if(result != null && result['code'] == 200) {
+      List list = [];
+      for(var item in result['tags']) {
+        list.add({
+          'id': item['playlistTag']['name'],
+          'name': item['playlistTag']['name'],
+          'source': AppConst.sourceWY,
+        });
+      }
+      return list;
+    }
+
+
   }
 
   static Future getTags() async {
@@ -35,7 +81,28 @@ class WYSongList {
     };
   }
 
-  static getList() {}
+  /// 歌单获取音乐列表
+  static Future<MusicListModel?> getList([String? sortId, String? tagId, int page = 0]) async {
+    String url = 'https://music.163.com/weapi/playlist/list';
+    var param = await CryptoUtils.weapi({
+      'cat': tagId ?? '全部',
+      // 全部,华语,欧美,日语,韩语,粤语,小语种,流行,摇滚,民谣,电子,舞曲,说唱,轻音乐,爵士,乡村,R&B/Soul,古典,民族,英伦,金属,朋克,蓝调,雷鬼,世界音乐,拉丁,另类/独立,New Age,古风,后摇,Bossa Nova,清晨,夜晚,学习,工作,午休,下午茶,地铁,驾车,运动,旅行,散步,酒吧,怀旧,清新,浪漫,性感,伤感,治愈,放松,孤独,感动,兴奋,快乐,安静,思念,影视原声,ACG,儿童,校园,游戏,70后,80后,90后,网络歌曲,KTV,经典,翻唱,吉他,钢琴,器乐,榜单,00后
+      'order': sortId,
+      // hot,new
+      'limit': limit_list,
+      'offset': limit_list * (page - 1),
+      'total': true,
+    });
+    var res = await HttpCore.getInstance().post(url, options: Options(extra: {'form': param}));
+    if (res != null && res['code'] == 200) {
+      return MusicListModel(
+        list: filterList(res['playlists']),
+        limit: limit_list,
+        total: res['total'],
+        source: AppConst.sourceWY,
+      );
+    }
+  }
 
   static Future<MusicModel?> getListDetail(String id, int page) async {}
 
@@ -65,7 +132,7 @@ class WYSongList {
         playCount: AppUtil.formatPlayCount(item['playCount']),
         id: item['id'].toString(),
         author: item['creator']['nickname'],
-        total: item['trackCount'],
+        total: item['trackCount'].toString(),
         desc: item['description'],
         time: item['createTime'] != null ? AppUtil.dateFormat(item['createTime']) : '',
       ));

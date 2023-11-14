@@ -84,7 +84,6 @@ class SongListController extends GetxController {
 
   /// 选择某个标签
   Future<void> openTag(item) async {
-    Logger.debug('openTag  ===item=$item  page=$page');
     String sortId = sortList.where((item) => item.isSelect).first.id;
     String tagId = item['id'].toString();
     MusicListModel? model = await SongRepository.getList(AppConst.sourceMap[currentPlatform.value]!, sortId.toString(), tagId, page);
@@ -96,6 +95,7 @@ class SongListController extends GetxController {
     musicListModel.value.page = model?.page;
     musicListModel.refresh();
     currentTag.value = item;
+    Logger.debug('openTag========${musicListModel.value.list.length}  ${musicListModel.value.limit}  ${musicListModel.value.total}  ${musicListModel.value.source}  ${musicListModel.value.page}');
   }
 
   Future<void> onRefresh() async {

@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lx_music_flutter/app/pages/player/views/base/controll_buttons.dart';
 import 'package:lx_music_flutter/app/pages/player/views/music_player_view.dart';
 import 'package:lx_music_flutter/app/pages/player/views/base/seek_bar.dart';
+import 'package:lx_music_flutter/app/repository/wy/wy_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
 import 'package:lx_music_flutter/services/music_player_service.dart';
@@ -41,8 +42,10 @@ class _MusicPlayerComponentState extends State<MusicPlayerComponent> {
         child: Row(
           children: [
 
-            IconButton(onPressed: (){
-              Get.to(MusicPlayerView());
+            IconButton(onPressed: () async {
+              // Get.to(MusicPlayerView());
+              // var res = await WYSongList.getList('hot', '全部', 1);
+              // print('=====$res');
             }, icon: Icon(Icons.playlist_add_check), iconSize: 30),
 
 

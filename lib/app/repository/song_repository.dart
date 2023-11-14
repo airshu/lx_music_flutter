@@ -184,6 +184,7 @@ class SongRepository {
   /// [tagId] 标签ID
   static Future<MusicListModel?> getList(String source, String? sortId, String? tagId, [int page = 0]) async {
     try {
+      Logger.debug('getList  source=$source  sortId=$sortId  tagId=$tagId  page=$page');
       return songListMap[source]?.call(sortId, tagId, page);
     } catch (e, s) {
       Logger.error('$e  $s');

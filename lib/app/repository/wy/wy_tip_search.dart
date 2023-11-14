@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:lx_music_flutter/app/app_util.dart';
 import 'package:lx_music_flutter/app/repository/wy/crypto_utils.dart';
 import 'package:lx_music_flutter/utils/http/http_client.dart';
@@ -10,9 +11,10 @@ class WYTipSearch {
       'referer': 'https://music.163.com/',
       'origin': 'https://music.163.com/',
     };
-    var form = CryptoUtils.weapi({'s': keyword});
-    var res = await HttpCore.getInstance().get(url, headers: headers, data: form);
-
-    return res['result']['songs'].map((info) => '${info['name']} - ${AppUtil.formatSingerName(singers: info['artists'])}');
+    var form = await CryptoUtils.weapi({'s': keyword});
+    var options = Options(extra: {'form': form});
+    var res = await HttpCore.getInstance().get(url, headers: headers, options: options);
+    return res['result']['songs']
+        .map((info) => '${info['name']} - ${AppUtil.formatSingerName(singers: info['artists'])}');
   }
 }

@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:easy_refresh/easy_refresh.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/app_const.dart';
@@ -8,7 +12,10 @@ import 'package:lx_music_flutter/app/pages/song_list/controllers/song_list_contr
 import 'package:lx_music_flutter/app/pages/song_list/views/song_list_detail_view.dart';
 import 'package:lx_music_flutter/app/repository/kw/kw_song_list.dart';
 import 'package:lx_music_flutter/models/music_item.dart';
+import 'package:lx_music_flutter/utils/extensions/string_extensions.dart';
+import 'package:lx_music_flutter/utils/http/http_client.dart';
 import 'package:lx_music_flutter/utils/log/logger.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// 歌单主页
 class SongListView extends BaseStatefulWidget {
@@ -95,9 +102,11 @@ class _SongListState extends State<SongListView> {
                   songListController.page++;
                   await songListController.onLoad();
 
-                  easyRefreshController.finishLoad(songListController.musicListModel.value.list.length % songListController.pageSize >= songListController.pageSize
-                      ? IndicatorResult.noMore
-                      : IndicatorResult.success);
+                  easyRefreshController.finishLoad(
+                      songListController.musicListModel.value.list.length % songListController.pageSize >=
+                              songListController.pageSize
+                          ? IndicatorResult.noMore
+                          : IndicatorResult.success);
                 },
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -126,13 +135,12 @@ class _SongListState extends State<SongListView> {
   Widget buildSongItem(int index) {
     if (songListController.musicListModel.value.list.length <= index) return Container();
     MusicListItem item = songListController.musicListModel.value.list.elementAt(index);
+    String imgUrl = item.img;
+    Logger.debug('buildSongItem====$imgUrl');
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () async {
-
-        Logger.debug('====$item');
         Get.to(SongListDetailView(musicListItem: item), id: AppConst.navigatorKeySongList);
-
 
         // String songmid = item['songmid'];
         // for (var t in item['types']) {
@@ -148,11 +156,21 @@ class _SongListState extends State<SongListView> {
         child: Column(
           children: [
             Image(
-              image: NetworkImage(item.img),
-              width: 64,
-              height: 64,
-              fit: BoxFit.cover,
-            ),
+                image: ExtendedNetworkImageProvider(imgUrl, cache: true),
+                width: 64,
+                height: 64,
+                errorBuilder: (context, error, stackTrace) {
+                  return DownloadImageWidget(url: imgUrl, width: 64, height: 64);
+                }),
+            // Image(
+            //     image: NetworkImage(imgUrl, headers: {"user-agent": ''}),
+            //     width: 64,
+            //     height: 64,
+            //     fit: BoxFit.cover,
+            //     errorBuilder: (context, error, stackTrace) {
+            //       return const Placeholder(fallbackWidth: 64, fallbackHeight: 64);
+            //     }
+            // ),
             // Text('${item['singer']}'),
             // Text('${item['albumName']}'),
             // Text('${item['interval']}'),
@@ -286,5 +304,66 @@ class _SongListState extends State<SongListView> {
         ),
       );
     });
+  }
+}
+
+class DownloadImageWidget extends StatefulWidget {
+  const DownloadImageWidget({super.key, required this.url, this.width, this.height});
+
+  final String url;
+  final double? width;
+  final double? height;
+
+  @override
+  State<DownloadImageWidget> createState() => _DownloadImageWidgetState();
+}
+
+class _DownloadImageWidgetState extends State<DownloadImageWidget> {
+  String savePath = '';
+
+  @override
+  void initState() {
+    getData();
+    super.initState();
+  }
+
+  String userAgent =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.76";
+
+  void getData() async {
+    Directory directory = await getTemporaryDirectory();
+    savePath = '${directory.path}/${widget.url.md5}';
+    if (!File(savePath).existsSync()) {
+      HttpCore.getInstance()
+          .download(widget.url, savePath,
+              options: Options(
+                responseType: ResponseType.bytes,
+                headers: {'user-agent': userAgent},
+              ))
+          .then((value) {
+        setState(() {});
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (savePath.isEmpty) {
+      return Placeholder(
+        fallbackWidth: widget.width ?? 64,
+        fallbackHeight: widget.height ?? 64,
+      );
+    }
+    return Image(
+      image: FileImage(File(savePath)),
+      width: widget.width ?? 64,
+      height: widget.height ?? 64,
+      errorBuilder: (context, error, stackTrace) {
+        return Placeholder(
+          fallbackWidth: widget.width ?? 64,
+          fallbackHeight: widget.height ?? 64,
+        );
+      },
+    );
   }
 }

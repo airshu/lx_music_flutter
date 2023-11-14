@@ -135,7 +135,7 @@ class BaseHttp {
       method: POST,
       params: params,
       headers: headers,
-      data: data,
+      data: data ?? options.extra?['body'],
       options: options,
       cancelToken: cancelToken,
       onSendProgressCallback: onSendProgressCallback,
@@ -218,7 +218,7 @@ class BaseHttp {
     options ??= Options();
     options.extra ??= {};
     headers = headers ??= {};
-    handleRequestData(url, headers, options.extra!, POST);
+    handleRequestData(url, headers, options.extra ?? {}, POST);
 
     var responseEntity = await postResponseEntity<T>(url, factory,
         data: data, headers: headers, params: params, options: options, cancelToken: cancelToken);
@@ -432,7 +432,7 @@ class BaseHttp {
           final value = options['form'][key];
           String encodedKey = Uri.encodeComponent(key);
           String encodedValue = Uri.encodeComponent(value);
-          formBody.add('$encodedKey=$encodedValue}');
+          formBody.add('$encodedKey=$encodedValue');
         }
         options['body'] = formBody.join('&');
         options.remove('form');

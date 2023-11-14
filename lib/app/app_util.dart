@@ -65,7 +65,7 @@ class AppUtil {
     return num.toString();
   }
 
-  static String dateFormat(String _date, [String format = 'Y-M-D h:m:s']) {
+  static String dateFormat(dynamic _date, [String format = 'Y-M-D h:m:s']) {
 
     var date = toDateObj(_date);
     if(date == null) {

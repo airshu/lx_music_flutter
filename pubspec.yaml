@@ -24,6 +24,7 @@ dependencies:
   dio: 5.3.2
   encrypt: ^5.0.1
   shared_preferences: ^2.2.1
+  extended_image: ^8.0.0
   get: 4.6.1
 #    git:
 #      url: https://github.com/jonataslaw/getx.git

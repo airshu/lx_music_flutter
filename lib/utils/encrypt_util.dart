@@ -127,12 +127,12 @@ class EncryptUtil {
   /// [iv] 偏移量
   static aesEncrypt(String plainText, String key, String iv) {
     try {
-      final _key = Key.fromUtf8(key);
-      final _iv = IV.fromUtf8(iv);
+      final _key = Key.fromBase64(key);
+      final _iv = IV.fromBase64(iv);
       /// 这里可以配置类型，
       final encrypter = Encrypter(AES(_key, mode: AESMode.cbc));
       final encrypted = encrypter.encrypt(plainText, iv: _iv);
-      return encrypted.base16;
+      return encrypted.base64;
     } catch (err) {
       print("aes encode error:$err");
       return plainText;
