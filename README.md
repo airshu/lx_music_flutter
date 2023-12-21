@@ -17,7 +17,7 @@
 
 ## 联系方式
 
-![](./wechat.jpg =200)
+<img src="./wechat.jpg" width="200px">
 
 
 ## 参考
