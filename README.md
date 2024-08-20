@@ -1,6 +1,6 @@
 # lx_music_flutter
 
-落雪播放器Flutter版
+lx播放器Flutter版
 
 
 ### 主要功能
