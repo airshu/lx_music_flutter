@@ -43,7 +43,7 @@ class MusicSource {
 
   static const List httpSourceList = [
     httpSourceDirect,
-    httpSourceTemp,
-    httpSourceTest,
+    // httpSourceTemp,
+    // httpSourceTest,
   ];
 }

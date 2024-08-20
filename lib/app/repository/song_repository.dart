@@ -36,6 +36,8 @@ import 'package:lx_music_flutter/utils/log/logger.dart';
 import 'package:lx_music_flutter/utils/md5_util.dart';
 import 'package:lx_music_flutter/utils/toast_util.dart';
 
+import 'music_url_api.dart';
+
 class SongRepository {
   /// 旧的酷狗搜索
   static Future<List<MusicItem>> searchKuGou(String keyword, int pageSize, int page) async {
@@ -165,6 +167,7 @@ class SongRepository {
   /// [type] 音质
   static Future getMusicUrl(String source, String musicSource, MusicItem songInfo, type) async {
     try {
+      return MusicUrlApi.getMusicUrl(songInfo, source, type);
       return musicUrlMap[source + musicSource]?.call(songInfo, type);
     } catch (e, s) {
       return getOtherSource(songInfo, source);
