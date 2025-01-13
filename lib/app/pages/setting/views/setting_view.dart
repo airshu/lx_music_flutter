@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_js/flutter_js.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/app/pages/setting/controllers/setting_controller.dart';
@@ -132,16 +131,5 @@ class _SettingViewState extends State<SettingView> {
     );
   }
 
-  void test() async {
-    try {
-      String ajvJS = await rootBundle.loadString("assets/sixyin-music-source-v1.0.7.js");
-      final JavascriptRuntime javascriptRuntime = getJavascriptRuntime(forceJavascriptCoreOnAndroid: false);
-      var result = javascriptRuntime.evaluate(ajvJS + "");
-
-      print('===>>>$result');
-    } catch(e, s) {
-      print('====>>> $e  $s');
-    }
-
-  }
+  void test() async {}
 }
