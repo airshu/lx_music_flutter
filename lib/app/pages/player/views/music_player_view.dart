@@ -20,13 +20,13 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
   @override
   void initState() {
     super.initState();
-    MusicPlayerService.instance.hide();
+    // MusicPlayerService.instance.hide();
   }
 
   @override
   void dispose() {
     super.dispose();
-    MusicPlayerService.instance.show();
+    // MusicPlayerService.instance.show();
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lx_music_flutter/app/pages/base/base_ui.dart';
 import 'package:lx_music_flutter/app/pages/leader_board/views/leader_board_view.dart';
+import 'package:lx_music_flutter/app/pages/player/views/music_player_component.dart';
 import 'package:lx_music_flutter/app/pages/search/controllers/search_song_controller.dart';
 import 'package:lx_music_flutter/app/pages/search/views/search_view.dart';
 import 'package:lx_music_flutter/app/pages/song_list/views/song_list_view.dart';
@@ -104,8 +105,15 @@ class _HomeViewsState extends State<HomeViews> {
         title: Obx(() => Text(getPage(controller.currentIndex.value).title)),
         actions: buildActions(),
       ),
-      body: Obx(
-        () => getPage(controller.currentIndex.value),
+      body: SafeArea(
+        child: Obx(
+          () => Column(
+            children: [
+              Expanded(child: getPage(controller.currentIndex.value),),
+              MusicPlayerComponent(),
+            ],
+          ),
+        ),
       ),
       drawer: buildDrawer(),
       // bottomNavigationBar: Obx(

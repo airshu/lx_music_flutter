@@ -12,7 +12,7 @@ import 'package:lx_music_flutter/utils/player/music_player.dart';
 
 import '../controllers/music_player_controller.dart';
 
-/// 播放器小组件
+/// 底部播放器小组件
 class MusicPlayerComponent extends StatefulWidget {
   const MusicPlayerComponent({
     super.key,
@@ -47,6 +47,7 @@ class _MusicPlayerComponentState extends State<MusicPlayerComponent> {
               // var res = await WYSongList.getList('hot', '全部', 1);
               // print('=====$res');
             }, icon: Icon(Icons.playlist_add_check), iconSize: 30),
+
 
 
             // buildCoverWidget(),

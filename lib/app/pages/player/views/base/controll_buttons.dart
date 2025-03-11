@@ -14,13 +14,14 @@ class ControllButtons extends StatelessWidget {
     final player = MusicPlayer().player;
     return Row(
       children: [
-        StreamBuilder<SequenceState?>(
-          stream: player.sequenceStateStream,
-          builder: (context, snapshot) => IconButton(
-            icon: const Icon(Icons.skip_previous),
-            onPressed: player.hasPrevious ? player.seekToPrevious : null,
-          ),
-        ),
+        // 上一首
+        // StreamBuilder<SequenceState?>(
+        //   stream: player.sequenceStateStream,
+        //   builder: (context, snapshot) => IconButton(
+        //     icon: const Icon(Icons.skip_previous),
+        //     onPressed: player.hasPrevious ? player.seekToPrevious : null,
+        //   ),
+        // ),
         StreamBuilder<PlayerState>(
             stream: player.playerStateStream,
             builder: (context, snapshot) {

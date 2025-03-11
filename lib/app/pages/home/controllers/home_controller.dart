@@ -11,7 +11,7 @@ class HomeController extends GetxController {
     super.onInit();
 
     Future.delayed(const Duration(microseconds: 100), () {
-      MusicPlayerService.instance.show();
+      // MusicPlayerService.instance.show();
     });
 
   }

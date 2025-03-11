@@ -167,7 +167,7 @@ class SongRepository {
   /// [type] 音质
   static Future getMusicUrl(String source, String musicSource, MusicItem songInfo, type) async {
     try {
-      return MusicUrlApi.getMusicUrl(songInfo, source, type);
+      // return MusicUrlApi.getMusicUrl(songInfo, source, type);
       return musicUrlMap[source + musicSource]?.call(songInfo, type);
     } catch (e, s) {
       return getOtherSource(songInfo, source);
