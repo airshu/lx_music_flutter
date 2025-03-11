@@ -59,9 +59,10 @@ class _HomeViewsState extends State<HomeViews> {
                 decoration: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeSong
                     ? TextDecoration.underline
                     : null,
-                  decorationColor:Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeSong
-                      ? Colors.red
-                      : null,
+                decorationColor:
+                    Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeSong
+                        ? Colors.red
+                        : null,
               ),
             ),
             onPressed: () {
@@ -80,9 +81,10 @@ class _HomeViewsState extends State<HomeViews> {
                 decoration: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeList
                     ? TextDecoration.underline
                     : null,
-                decorationColor: Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeList
-                    ? Colors.red
-                    : null,
+                decorationColor:
+                    Get.find<SearchSongController>().searchType.value == SearchSongController.searchTypeList
+                        ? Colors.red
+                        : null,
               ),
             ),
             onPressed: () {

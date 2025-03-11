@@ -24,7 +24,7 @@ class _AppState extends State<App> {
 
   Widget app() {
     return GetMaterialApp(
-      title: "落雪音乐",
+      title: "LX音乐",
       routingCallback: (value) {
         print('routingCallback $value');
       },
