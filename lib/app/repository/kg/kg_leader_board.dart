@@ -147,7 +147,7 @@ class KGLeaderBoard {
         albumId: item['album_id'],
         songmid: item['audio_id'].toString(),
         source: AppConst.sourceKG,
-        interval: AppUtil.formatPlayTime(item['duration']),
+        interval: item['duration'],
         img: '',
         qualityList: types,
         qualityMap: _types,

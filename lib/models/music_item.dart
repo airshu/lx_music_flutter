@@ -90,8 +90,8 @@ class MusicItem {
   String source;
 
   /// 时长 展示格式化的时间 @see AppUtil.formatPlayTime
-  @JsonKey(name: 'interval', defaultValue: '')
-  String interval;
+  @JsonKey(name: 'interval', defaultValue: 0)
+  int interval;
 
   /// 封面
   @JsonKey(name: 'img', defaultValue: '')

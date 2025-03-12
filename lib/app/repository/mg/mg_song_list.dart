@@ -192,7 +192,7 @@ class MGSongList {
         albumId: item['albumId'],
         songmid: item['songId'],
         source: AppConst.sourceMG,
-        interval: intervalTest ? regExp.firstMatch(item['length'])?.group(1) ?? '' : '',
+        interval: intervalTest ? int.parse(regExp.firstMatch(item['length'])?.group(1) ?? "0") : 0,
         img: item['albumImgs']?.first?['img'],
         qualityList: types,
         qualityMap: _types,

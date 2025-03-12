@@ -72,7 +72,7 @@ class KGMusicSearch {
       albumId: '${rawData['AlbumID']}',
       songmid: '${rawData['Audioid']}',
       source: AppConst.sourceKG,
-      interval: AppUtil.formatPlayTime(rawData['Duration']),
+      interval: rawData['Duration'],
       img: '',
       lrc: '',
       otherSource: '',

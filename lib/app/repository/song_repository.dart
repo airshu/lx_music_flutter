@@ -77,6 +77,7 @@ class SongRepository {
     String url = '${Urls.kugouGetSongUrl}pid=6&cmd=3&acceptMp3=1&hash=$hash&key=$key';
     try {
       var result = await HttpCore.getInstance().get(url);
+      Logger.debug("Kugou >>>>getSongUrl  hash=$hash  url=$url  result=$result");
       if (result['url'] == null) {
         ToastUtil.show(result['error']);
         return null;
@@ -135,6 +136,17 @@ class SongRepository {
   /// [str] 关键字
   static Future<MusicListModel?> searchSongList(String str, String source, [int page = 1, int limit = 10]) async {
     try {
+
+      // 测试酷狗
+      // List<MusicItem> list = await searchKuGou(str, limit, page);
+      // return MusicListModel(
+      //   limit: limit,
+      //   page: page,
+      //   total: list.length,
+      //   source: source,
+      //   list: list.map((e) => MusicListItem(name: e.name, source: e.source, img: e.img, playCount: '0', id: e.songmid, author: e.albumName)).toList(),
+      // );
+
       return await songListSearchMap[source](str, page, limit);
     } catch (e, s) {
       Logger.error('$e  $s');
@@ -167,8 +179,16 @@ class SongRepository {
   /// [type] 音质
   static Future getMusicUrl(String source, String musicSource, MusicItem songInfo, type) async {
     try {
-      // return MusicUrlApi.getMusicUrl(songInfo, source, type);
-      return musicUrlMap[source + musicSource]?.call(songInfo, type);
+      // 测试酷狗
+      // String? url = await getSongUrl(songInfo.hash!!);
+      // Logger.debug('getMusicUrl  source=$source  musicSource=$musicSource  type=$type  url=$url');
+
+
+      // var result = await musicUrlMap[source + musicSource]?.call(songInfo, type);
+      // return result;
+
+
+      return MusicUrlApi.getMusicUrl(songInfo, source, type);
     } catch (e, s) {
       return getOtherSource(songInfo, source);
     }

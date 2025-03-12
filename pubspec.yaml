@@ -20,7 +20,7 @@ dependencies:
   just_audio: ^0.9.34
   audio_session: ^0.1.16
   rxdart: ^0.27.7
-  drift: ^2.26.0
+  sqflite: ^2.3.0
   dio: 5.3.2
   encrypt: ^5.0.1
   convert:

@@ -75,6 +75,9 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
       appBar: SearchAppBar(
         leadingWidth: 88,
         leading: Obx(() => buildMenuWidget()),
+        onRightTap: (){
+          searchSongController.search();
+        },
         onSearch: (value) {
           searchSongController.keyword = value;
           searchSongController.search();
@@ -166,7 +169,7 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
                 ],
               ),
             ),
-            Text(item.interval),
+            Text('${item.interval}'),
             Builder(builder: (ctx) {
               return IconButton(
                 onPressed: () {
@@ -239,6 +242,9 @@ class _SearchViewWidgetState extends State<SearchViewWidget> {
           children: [
             Image(
               image: NetworkImage(item.img),
+              errorBuilder: (context, error, stackTrace) {
+                return Container();
+              },
               width: 64,
               height: 64,
               fit: BoxFit.cover,

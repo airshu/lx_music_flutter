@@ -1,3 +1,6 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'song_list.g.dart';
 /// 歌单标签
 class SortItem {
   String name;
@@ -9,11 +12,17 @@ class SortItem {
 }
 
 /// 歌单详情
+@JsonSerializable()
 class DetailInfo {
+  @JsonKey()
   String name;
+  @JsonKey()
   String? desc;
+  @JsonKey()
   String? playCount;
+  @JsonKey()
   String author;
+  @JsonKey()
   String? imgUrl;
 
   DetailInfo({
@@ -23,6 +32,10 @@ class DetailInfo {
     required this.author,
     this.imgUrl = '',
   });
+
+  factory DetailInfo.fromJson(Map<String, dynamic> json) => _$DetailInfoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DetailInfoToJson(this);
 
   factory DetailInfo.empty() {
     return DetailInfo(

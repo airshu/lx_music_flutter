@@ -59,8 +59,8 @@ class LeaderBoardItem {
   @JsonKey(name: 'source', defaultValue: '')
   String source;
 
-  @JsonKey(name: 'interval', defaultValue: '')
-  String interval;
+  @JsonKey(name: 'interval', defaultValue: 0)
+  int interval;
 
   @JsonKey(name: 'img', defaultValue: '')
   String img;

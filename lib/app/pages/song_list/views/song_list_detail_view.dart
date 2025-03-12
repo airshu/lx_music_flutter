@@ -173,7 +173,7 @@ class _SongListDetailViewState extends State<SongListDetailView> {
                     ),
                   ),
                   Text(
-                    item.interval,
+                    '${item.interval}',
                     style: const TextStyle(fontSize: 11),
                   ),
                   Builder(builder: (ctx) {

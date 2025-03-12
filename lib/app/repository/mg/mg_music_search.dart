@@ -116,7 +116,7 @@ class MGMusicSearch {
           albumId: data['albumId'],
           songmid: data['songId'],
           source: AppConst.sourceMG,
-          interval: AppUtil.formatPlayTime(data['duration']),
+          interval: data['duration'],
           img: img,
           lrc: '',
           otherSource: '',

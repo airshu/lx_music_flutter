@@ -59,7 +59,7 @@ class WYMusicSearch {
         albumId: item['al']['id'],
         songmid: item['id'],
         source: AppConst.sourceWY,
-        interval: AppUtil.formatPlayTime(item['dt'] ?? 0 / 1000),
+        interval: item['dt'] ?? 0 / 1000,
         img: item['al']['picUrl'],
         qualityList: types,
         qualityMap: _types,

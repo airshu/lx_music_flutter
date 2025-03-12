@@ -90,7 +90,7 @@ class TXMusicSearch {
         albumId: albumId,
         songmid: item['mid'],
         source: AppConst.sourceTX,
-        interval: AppUtil.formatPlayTime(item['interval']),
+        interval: item['interval'],
         img: (albumId == '' || albumId == '空')
             ? item['singer'] != null
                 ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item['singer'][0]['mid']}.jpg'

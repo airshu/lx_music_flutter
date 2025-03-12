@@ -108,7 +108,7 @@ class KWLeaderBoard {
         albumId: item['albumid'],
         songmid: item['id'],
         source: AppConst.sourceKW,
-        interval: AppUtil.formatPlayTime(int.parse(item['song_duration'])),
+        interval: int.parse(item['song_duration']),
         img: item['pic'] ?? '',
         qualityList: types,
         qualityMap: _types,

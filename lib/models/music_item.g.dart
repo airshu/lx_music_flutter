@@ -14,6 +14,11 @@ MusicModel _$MusicModelFromJson(Map<String, dynamic> json) => MusicModel(
       allPage: json['allPage'] as int? ?? 0,
       total: json['total'] as int? ?? 0,
       source: json['source'] as String? ?? '',
+      page: json['page'] as int?,
+      info: json['info'] == null
+          ? null
+          : DetailInfo.fromJson(json['info'] as Map<String, dynamic>),
+      limit: json['limit'] as int?,
     );
 
 Map<String, dynamic> _$MusicModelToJson(MusicModel instance) =>
@@ -22,6 +27,9 @@ Map<String, dynamic> _$MusicModelToJson(MusicModel instance) =>
       'allPage': instance.allPage,
       'total': instance.total,
       'source': instance.source,
+      'page': instance.page,
+      'limit': instance.limit,
+      'info': instance.info,
     };
 
 MusicItem _$MusicItemFromJson(Map<String, dynamic> json) => MusicItem(
@@ -31,7 +39,7 @@ MusicItem _$MusicItemFromJson(Map<String, dynamic> json) => MusicItem(
       albumId: json['albumId'] as String? ?? '',
       songmid: json['songmid'] as String? ?? '',
       source: json['source'] as String? ?? '',
-      interval: json['interval'] as String? ?? '',
+      interval: json['interval'] as int? ?? 0,
       img: json['img'] as String? ?? '',
       lrc: json['lrc'] as String? ?? '',
       otherSource: json['otherSource'] as String? ?? '',

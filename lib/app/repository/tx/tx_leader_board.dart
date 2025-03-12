@@ -99,7 +99,7 @@ class TxLeaderBoard {
         albumId: item['album']['mid'],
         songmid: item['mid'],
         source: AppConst.sourceTX,
-        interval: AppUtil.formatPlayTime(item['interval']),
+        interval: item['interval'],
         img: (item['album']['name'] == '' || item['album']['name'] == '空')
             ? (item['singer']?['length'] != null ? 'https://y.gtimg.cn/music/photo_new/T001R500x500M000${item.singer[0]['mid']}.jpg' : '')
             : 'https://y.gtimg.cn/music/photo_new/T002R500x500M000${item['album']['mid']}.jpg',

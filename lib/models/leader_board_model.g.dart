@@ -35,7 +35,7 @@ LeaderBoardItem _$LeaderBoardItemFromJson(Map<String, dynamic> json) =>
       albumId: json['albumId'] as String? ?? '',
       songmid: json['songmid'] as String? ?? '',
       source: json['source'] as String? ?? '',
-      interval: json['interval'] as String? ?? '',
+      interval: json['interval'] as int? ?? 0,
       img: json['img'] as String? ?? '',
       lrc: json['lrc'] as String? ?? '',
       otherSource: json['otherSource'] as String? ?? '',

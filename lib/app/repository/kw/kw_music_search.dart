@@ -65,7 +65,7 @@ class KWMusicSearch {
         singer: AppUtil.formatSinger(AppUtil.decodeName(info['ARTIST'])),
         songmid: songId,
         albumId: AppUtil.decodeName(info['ALBUMID'] ?? ''),
-        interval: AppUtil.formatPlayTime(int.parse(info['DURATION'] ?? '') ?? 0),
+        interval: int.parse(info['DURATION'] ?? '') ?? 0,
         lrc: '',
         img: '',
         otherSource: '',

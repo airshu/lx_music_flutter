@@ -158,7 +158,7 @@ class KGSongList {
         albumName: AppUtil.decodeName(item['album_name']),
         albumId: item['album_info']['album_id'],
         qualityList: types,
-        interval: AppUtil.formatPlayTime(int.parse(item['audio_info']['timelength']) ~/ 1000),
+        interval: int.parse(item['audio_info']['timelength']) ~/ 1000,
         qualityMap: _types,
         songmid: item['audio_info']['audio_id'],
         urlMap: {},

@@ -293,7 +293,7 @@ class TXSongList {
         albumId: item['album']['mid'],
         songmid: item['mid'],
         source: 'tx',
-        interval: AppUtil.formatPlayTime(item['interval']),
+        interval: item['interval'],
         // songId: item['id'],
         // albumMid: item['album']['mid'],
         // strMediaMid: item['file']['media_mid'],
